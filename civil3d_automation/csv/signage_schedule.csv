@@ -1,0 +1,3 @@
+row,station_m,offset_m,side,sign_code,block_name,rotation_deg
+1,120.0,4.5,L,STOP-30,SGN_STOP,
+2,340.0,4.5,R,SPEED-50,SGN_SPEED_50,

@@ -1,0 +1,42 @@
+{
+  "project": {
+    "number": "PRJ-2026-DEMO",
+    "name": "Demo corridor section",
+    "revision": "REV-A",
+    "designer": "",
+    "checker": ""
+  },
+  "paths": {
+    "alignment_pi": "csv/alignment_pi.csv",
+    "profile_pvis": "csv/profile_pvis.csv",
+    "section_widths": "csv/section_widths.csv",
+    "signage": "csv/signage_schedule.csv",
+    "payitems": "csv/payitems.csv",
+    "volumes_csv": "out/volumes_demo.csv",
+    "boq_csv": "out/boq_demo.csv",
+    "qa_log": "out/qa/run_log.txt"
+  },
+  "names": {
+    "alignment": "DEMO-CL",
+    "profile_fg": "DEMO-FG",
+    "corridor": "DEMO-COR",
+    "assembly": "BasicLaneAssembly",
+    "surface_eg": "EG",
+    "surface_fg": "FG",
+    "layers": {
+      "marking": "C-ROAD-MARK",
+      "signage": "C-SGN-FURN"
+    }
+  },
+  "styles": {
+    "alignment": "Standard",
+    "alignment_label": "Standard",
+    "profile": "Standard",
+    "profile_label": "Standard"
+  },
+  "design": {
+    "start_station": 0.0,
+    "max_grade_pct": 8.0,
+    "min_grade_pct": 0.3
+  }
+}

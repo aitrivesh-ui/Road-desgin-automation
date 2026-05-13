@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Road Design Automation — User Guide &amp; Installation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;800&display=swap');
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #141720;
+    --surface2: #1c2030;
+    --border: #252a3a;
+    --accent: #f0a500;
+    --accent2: #3ecfcf;
+    --accent3: #e04545;
+    --accent4: #7c5cff;
+    --text: #dde3f0;
+    --muted: #6b7590;
+    --manual: #e8a0a0;
+    --auto: #7dd87d;
+    --code-bg: #0a0c10;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    line-height: 1.65;
+    min-height: 100vh;
+  }
+
+  .header {
+    background: linear-gradient(135deg, #0d0f14 0%, #141a2e 45%, #121a28 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 2.75rem 2rem 2.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -20px;
+    width: 240px; height: 240px;
+    background: radial-gradient(circle, rgba(124,92,255,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    border: 1px solid rgba(62,207,207,0.35);
+    border-radius: 3px;
+    padding: 0.22rem 0.6rem;
+    margin-bottom: 0.85rem;
+  }
+
+  h1 {
+    font-size: clamp(1.65rem, 3.5vw, 2.65rem);
+    font-weight: 800;
+    line-height: 1.12;
+    max-width: 720px;
+    color: #fff;
+  }
+  .subtitle {
+    margin-top: 0.85rem;
+    color: var(--muted);
+    font-size: 1rem;
+    max-width: 680px;
+  }
+
+  .nav-links {
+    margin-top: 1.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+  }
+  .nav-links a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+  }
+  .nav-links a:hover { border-bottom-color: rgba(240,165,0,0.45); }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.1rem 1.25rem;
+    margin-bottom: 2.5rem;
+  }
+  .toc-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.6rem;
+  }
+  .toc ul { list-style: none; columns: 1; }
+  @media (min-width: 640px) { .toc ul { columns: 2; column-gap: 2rem; } }
+  .toc li { margin-bottom: 0.35rem; }
+  .toc a {
+    font-size: 0.88rem;
+    color: var(--accent2);
+    text-decoration: none;
+  }
+  .toc a:hover { color: var(--accent); }
+
+  .section { margin-bottom: 2.75rem; }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.55rem;
+  }
+
+  h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--accent2);
+    margin: 1.35rem 0 0.5rem;
+  }
+
+  p { margin-bottom: 0.85rem; font-size: 0.96rem; color: var(--text); }
+  ul, ol { margin: 0.5rem 0 1rem 1.35rem; color: var(--text); font-size: 0.94rem; }
+  li { margin-bottom: 0.4rem; }
+  strong { color: #fff; font-weight: 600; }
+
+  code, .mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.84em;
+    background: var(--surface2);
+    padding: 0.12em 0.4em;
+    border-radius: 3px;
+    color: var(--accent2);
+  }
+
+  .alert {
+    border-left: 3px solid var(--accent);
+    background: rgba(240,165,0,0.07);
+    border-radius: 0 6px 6px 0;
+    padding: 0.85rem 1rem;
+    margin: 1.1rem 0;
+    font-size: 0.9rem;
+  }
+  .alert.teal { border-color: var(--accent2); background: rgba(62,207,207,0.07); }
+  .alert.violet { border-color: var(--accent4); background: rgba(124,92,255,0.08); }
+
+  .table-wrap { overflow-x: auto; margin: 1rem 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  th {
+    background: var(--surface2);
+    color: var(--accent);
+    text-align: left;
+    padding: 0.55rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid rgba(37,42,58,0.65);
+    vertical-align: top;
+    color: var(--text);
+  }
+  tr:hover td { background: var(--surface); }
+  .td-manual { color: var(--manual); font-weight: 600; }
+  .td-auto { color: var(--auto); font-weight: 600; }
+  .td-mix { color: var(--accent2); }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin: 0.75rem 0 1rem;
+    font-size: 0.8rem;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .lg { display: flex; align-items: center; gap: 0.35rem; }
+  .dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+  .dot.manual { background: var(--manual); }
+  .dot.auto { background: var(--auto); }
+  .dot.mix { background: var(--accent2); }
+
+  .flow {
+    counter-reset: step;
+    margin: 1rem 0;
+  }
+  .flow-item {
+    position: relative;
+    padding-left: 2.5rem;
+    margin-bottom: 1rem;
+  }
+  .flow-item::before {
+    counter-increment: step;
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1.75rem;
+    height: 1.75rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .flow-title { font-weight: 600; color: #fff; margin-bottom: 0.2rem; }
+  .flow-desc { font-size: 0.88rem; color: var(--muted); }
+
+  .file-tree {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem 1.15rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    line-height: 1.7;
+    color: #c5cfdf;
+    overflow-x: auto;
+    margin: 1rem 0;
+  }
+
+  .footer {
+    border-top: 1px solid var(--border);
+    padding: 1.25rem 2rem;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="max-width:900px;margin:0 auto;padding:0 2rem;">
+    <div class="badge">Documentation</div>
+    <h1>Road design automation — full user guide</h1>
+    <p class="subtitle">What gets automated, what stays manual, how to install prerequisites, and the exact steps to run the Civil 3D + Dynamo pipeline (markings M1–M8 and the <code>civil3d_automation</code> package).</p>
+    <div class="nav-links">
+      <a href="road_automation_beginners.html">Beginner primer</a>
+      <a href="road_marking_dynamo.html">Hub — markings &amp; pipeline</a>
+      <a href="road_automation_advanced.html">Advanced modules (playbook)</a>
+      <a href="civil3d_automation/README.md">M1–M8 package (README)</a>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <nav class="toc" aria-label="Table of contents">
+    <div class="toc-title">On this page</div>
+    <ul>
+      <li><a href="#quick-start">Quick start (5 steps)</a></li>
+      <li><a href="#data-kit">Data starter kit &amp; preflight</a></li>
+      <li><a href="#what">What this automation is</a></li>
+      <li><a href="#install">Installation &amp; prerequisites</a></li>
+      <li><a href="#folders">Package layout on disk</a></li>
+      <li><a href="#first-setup">First-time setup (template drawing)</a></li>
+      <li><a href="#dynamo-setup">Dynamo graphs — how to build them</a></li>
+      <li><a href="#run-order">Steps to follow each run</a></li>
+      <li><a href="#manual-auto">Manual vs automated (full detail)</a></li>
+      <li><a href="#modules">Module-by-module reference</a></li>
+      <li><a href="#troubleshoot">Troubleshooting &amp; versioning</a></li>
+    </ul>
+  </nav>
+
+  <div class="section" id="quick-start">
+    <div class="section-label">First run</div>
+    <h2>Quick start — five steps</h2>
+    <ol>
+      <li><strong>Install software</strong> — Civil 3D + Dynamo (see <a href="#install">Installation</a>).</li>
+      <li><strong>Build the template drawing once</strong> — layers, styles, assembly, blocks, surfaces (<a href="#first-setup">First-time setup</a>).</li>
+      <li><strong>Prepare data</strong> — copy <code>civil3d_automation/csv/templates/*.csv</code> into <code>civil3d_automation/csv/</code>, fill rows; copy <code>config/project.example.json</code> to <code>config/project.json</code> and edit names/paths. Plain-language field help: <a href="civil3d_automation/config/project.schema_notes.md"><code>project.schema_notes.md</code></a>.</li>
+      <li><strong>Optional preflight</strong> — run <code>civil3d_automation/tools/run_preflight.bat</code> to check CSV headers and copy the absolute path to <code>project.json</code> for Dynamo.</li>
+      <li><strong>Run in Civil 3D</strong> — open your project DWG, run Dynamo Player with <code>m8_run_all.py</code> and paste the JSON path; then check <code>out/</code> (<a href="#run-order">full run order</a>).</li>
+    </ol>
+    <p class="mono" style="font-size:0.85rem;margin-top:0.5rem;">New to road terms? Read <a href="road_automation_beginners.html" style="color:var(--accent2);">road_automation_beginners.html</a>.</p>
+  </div>
+
+  <div class="section" id="data-kit">
+    <div class="section-label">Templates</div>
+    <h2>Data starter kit and preflight helper</h2>
+    <p><strong>Blank tables</strong> — Header-only CSVs live in <code>civil3d_automation/csv/templates/</code> (see <a href="civil3d_automation/csv/templates/README.md"><code>templates/README.md</code></a>). Copy them into <code>csv/</code> so you keep the demo samples intact if you prefer.</p>
+    <p><strong>Example config</strong> — <code>civil3d_automation/config/project.example.json</code> is a clean starting point for <code>project.json</code>.</p>
+    <p><strong>Windows preflight</strong> — The small Python tool under <code>civil3d_automation/tools/</code> checks that files referenced in <code>project.json</code> exist, validates CSV column headers against what M1–M7 expect, opens your <code>csv</code> or <code>config</code> folder, and copies the full path to <code>project.json</code> for Dynamo Player. Details: <a href="civil3d_automation/tools/README.md"><code>tools/README.md</code></a>. If the window does not open, your Python may lack Tkinter — use <code>python road_automation_preflight.py --validate path\to\project.json</code> from a terminal instead.</p>
+    <p><strong>Excel workflow</strong> — A multi-sheet starter workbook can be generated from the same headers; see <a href="civil3d_automation/csv/templates/README.md#excel-starter-workbook"><code>templates/README.md</code> (Excel section)</a>.</p>
+  </div>
+
+  <div class="section" id="what">
+    <div class="section-label">Overview</div>
+    <h2>What this automation is</h2>
+    <p>This workflow targets <strong>Autodesk Civil 3D</strong> projects where repetitive tasks (alignments from tables, profiles from grades, corridor rebuilds, volumes, signage placement, BOQ rollups, and pavement marking solids) are driven by <strong>CSV data</strong> and <strong>Dynamo Python Script</strong> nodes instead of hundreds of manual picks and dialog steps.</p>
+    <p>Two documentation layers work together:</p>
+    <ul>
+      <li><strong>Marking module</strong> — described in <a href="road_marking_dynamo.html" style="color:var(--accent2);">road_marking_dynamo.html</a>: one Python script creates SN-style dashed/solid marking solids from a 3D polyline or feature line, with XData for re-run without duplicate geometry.</li>
+      <li><strong>M1–M8 package</strong> — implemented under <code>civil3d_automation/</code>: separate scripts for alignment, profile, corridor regions, volumes, signage, sheet helper, BOQ rollup, and an orchestrator (<code>m8_run_all.py</code>) that reads <code>config/project.json</code>.</li>
+    </ul>
+    <div class="alert teal">
+      <strong>Important:</strong> Nothing here replaces engineering judgement. Automation applies <strong>your</strong> standards (CSV numbers, template styles, pay-item map) and still needs <strong>you</strong> to verify geometry, contract mapping, and issue control.
+    </div>
+  </div>
+
+  <div class="section" id="install">
+    <div class="section-label">Software</div>
+    <h2>Installation and prerequisites</h2>
+    <p>There is no Windows “installer” executable in this repository. You install <strong>Autodesk products</strong> and then <strong>link this folder</strong> to your Dynamo workflow.</p>
+
+    <h3>1. Required software</h3>
+    <table>
+      <thead>
+        <tr><th>Component</th><th>Requirement</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Civil 3D</td>
+          <td>2022 or newer (recommended)</td>
+          <td class="muted">API names differ slightly by year; verify in <code>civil3d_automation/API_NOTES.md</code> after first run.</td>
+        </tr>
+        <tr>
+          <td>Dynamo</td>
+          <td>Version bundled with Civil 3D (Dynamo 2.x)</td>
+          <td>Use Civil’s Dynamo, not Dynamo Sandbox.</td>
+        </tr>
+        <tr>
+          <td>Python in Dynamo</td>
+          <td><strong>IronPython 2.7</strong> for the supplied scripts</td>
+          <td>In the Python Script node settings, set engine to IronPython 2 unless you port scripts to CPython 3 (different references and limits).</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>2. Repository / folder “installation”</h3>
+    <ol>
+      <li>Copy or clone the project folder (e.g. <code>d:\road desgin automation\</code>) anywhere on disk.</li>
+      <li>Keep <code>civil3d_automation\</code> next to the HTML docs so relative links in this guide stay valid.</li>
+      <li>Edit <code>civil3d_automation\config\project.json</code> and CSV files under <code>civil3d_automation\csv\</code> for your job.</li>
+      <li>When using <strong>M8</strong>, pass the <strong>absolute</strong> path to <code>project.json</code> into the Dynamo graph (e.g. <code>D:\…\civil3d_automation\config\project.json</code>).</li>
+    </ol>
+
+    <h3>3. Optional tools</h3>
+    <ul>
+      <li><strong>Excel</strong> — for opening BOQ and volume CSVs; Power Query can reshape exports.</li>
+      <li><strong>Git</strong> — to version CSVs and <code>project.json</code> per drawing issue.</li>
+    </ul>
+
+    <div class="alert violet">
+      <strong>No pip install inside Civil 3D</strong> for the default path: IronPython does not use <code>openpyxl</code> or <code>yaml</code> in these scripts. Configuration uses <strong>JSON</strong> (<code>project.json</code>). BOQ output is <strong>CSV</strong> for maximum compatibility.
+    </div>
+  </div>
+
+  <div class="section" id="folders">
+    <div class="section-label">Disk layout</div>
+    <h2>Package layout on disk</h2>
+    <p>After setup, you should see this structure (names may vary if you add saved <code>.dyn</code> files):</p>
+    <div class="file-tree">road desgin automation/
+├── road_automation_beginners.html    ← Plain-language primer &amp; glossary
+├── road_marking_dynamo.html          ← Marking script + pipeline narrative
+├── road_automation_advanced.html     ← Extended automation playbook
+├── road_automation_user_guide.html   ← This file
+└── civil3d_automation/
+    ├── README.md
+    ├── requirements-tools.txt         ← Optional: openpyxl for Excel builder
+    ├── API_NOTES.md
+    ├── config/
+    │   ├── project.json                ← M8 orchestrator + path names
+    │   ├── project.example.json        ← Starter copy for new jobs
+    │   └── project.schema_notes.md     ← Field-by-field JSON help
+    ├── csv/
+    │   ├── templates/                  ← Header-only CSVs + DataStarter.xlsx
+    │   └── …                           ← Your filled CSVs (edit here)
+    ├── tools/
+    │   ├── run_preflight.bat           ← Windows: validate data before Civil
+    │   └── …
+    ├── python/
+    │   ├── m1_alignment_from_csv.py
+    │   ├── m2_profile_from_csv.py
+    │   ├── m3_corridor_regions_from_csv.py
+    │   ├── m4_corridor_rebuild_volumes.py
+    │   ├── m5_signage_from_csv.py
+    │   ├── m6_sheets_helper.py
+    │   ├── m7_boq_rollup.py
+    │   └── m8_run_all.py
+    ├── dynamo/
+    │   └── README_BUILD_GRAPHS.md      ← How to wire Dynamo Player
+    ├── template/
+    │   └── README.md                   ← What your seed DWT must contain
+    └── out/                            ← Volumes, BOQ, QA logs (created at run)</div>
+  </div>
+
+  <div class="section" id="first-setup">
+    <div class="section-label">One-time</div>
+    <h2>First-time setup — template drawing</h2>
+    <p>Automation assumes a <strong>template DWG or DWT</strong> that already contains Civil styles and CAD primitives the scripts reference by <strong>name</strong>. Full checklist is in <code>civil3d_automation/template/README.md</code>. Summarised here:</p>
+    <ul>
+      <li><strong>Layers:</strong> e.g. <code>0</code>, <code>C-ROAD-MARK</code>, <code>C-SGN-FURN</code> (match <code>project.json</code> → <code>names.layers</code>).</li>
+      <li><strong>Alignment &amp; profile styles + label sets:</strong> names must match <code>project.json</code> → <code>styles.*</code> (defaults often <code>Standard</code>).</li>
+      <li><strong>Assembly:</strong> an assembly whose name matches <code>names.assembly</code> (used by M3).</li>
+      <li><strong>Blocks (M5):</strong> block definitions exactly as listed in <code>signage_schedule.csv</code> (e.g. <code>SGN_STOP</code>).</li>
+      <li><strong>Surfaces (M4/M7):</strong> TIN (or compatible) surfaces for existing ground and finished model, named e.g. <code>EG</code> and <code>FG</code> per config.</li>
+      <li><strong>Feature lines (optional M3 extension):</strong> if you later bind targets from CSV, name them consistently (e.g. <code>EOP_L</code>).</li>
+    </ul>
+    <p>Creating this template is <strong>manual Civil 3D work</strong> once per firm or project type; afterwards each job mainly edits CSV/JSON and runs Dynamo.</p>
+  </div>
+
+  <div class="section" id="dynamo-setup">
+    <div class="section-label">Dynamo Player</div>
+    <h2>Dynamo graphs — how to build them</h2>
+    <p>Follow <code>civil3d_automation/dynamo/README_BUILD_GRAPHS.md</code> in detail. Short version:</p>
+    <div class="flow">
+      <div class="flow-item">
+        <div class="flow-title">Open Dynamo from Civil 3D</div>
+        <div class="flow-desc">Manage tab → Dynamo (or Dynamo Player after graphs are saved).</div>
+      </div>
+      <div class="flow-item">
+        <div class="flow-title">New graph → Python Script node</div>
+        <div class="flow-desc">Set engine to <strong>IronPython 2</strong>. Paste the entire contents of the matching <code>python/m*.py</code> file.</div>
+      </div>
+      <div class="flow-item">
+        <div class="flow-title">Wire inputs in order</div>
+        <div class="flow-desc">Each script documents <code>IN[0]</code>, <code>IN[1]</code>, … at the top. Use String nodes for paths and names; Number sliders where needed.</div>
+      </div>
+      <div class="flow-item">
+        <div class="flow-title">Watch the output</div>
+        <div class="flow-desc">Connect the Python output to a <strong>Watch</strong> node. Messages beginning with <code>OK:</code> or <code>ERROR:</code> tell you whether to commit or fix data.</div>
+      </div>
+      <div class="flow-item">
+        <div class="flow-title">Save and expose to Dynamo Player</div>
+        <div class="flow-desc">Save as <code>M1_Alignment.dyn</code>, etc., under <code>civil3d_automation/dynamo/</code> (optional but recommended for repeatability).</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" id="run-order">
+    <div class="section-label">Operations</div>
+    <h2>Steps to follow each design run</h2>
+
+    <h3>Option A — Full chain (M8)</h3>
+    <ol>
+      <li>Open your <strong>project DWG</strong> created from the template.</li>
+      <li>Update <code>csv\</code> files and <code>config\project.json</code> (alignment PI, profile PVIs, regions, signage, pay items, output paths).</li>
+      <li>Open Dynamo Player and run the graph that contains <strong><code>m8_run_all.py</code></strong> with <code>IN[0]</code> = full path to <code>project.json</code>.</li>
+      <li>Optional <code>IN[1]</code>: comma list of steps, e.g. <code>m1,m2,m4</code> to run a subset.</li>
+      <li>For <strong>each</strong> marking source line, run the <strong>marking</strong> graph from <a href="road_marking_dynamo.html">road_marking_dynamo.html</a> (between corridor work and signage/BOQ is typical).</li>
+      <li>Open <code>out\</code> CSVs in Excel; perform design QA and issue PDFs/sheets as per your QA procedure.</li>
+    </ol>
+
+    <h3>Option B — Step-by-step (M1 then M2 …)</h3>
+    <ol>
+      <li><strong>M1</strong> — PI CSV → alignment (polyline-style fixed lines unless you extend curves).</li>
+      <li><strong>M2</strong> — PVI CSV → layout profile on that alignment; read grade QA in Watch.</li>
+      <li><strong>M3</strong> — Region table → corridor baseline regions + rebuild.</li>
+      <li><strong>M4</strong> — Rebuild corridor; create volume surface EG vs FG; write volume CSV.</li>
+      <li><strong>Marking</strong> — per feature line / 3D polyline (hub HTML script).</li>
+      <li><strong>M5</strong> — Signage CSV → blocks (re-run safe: prior XData-tagged inserts are erased).</li>
+      <li><strong>M6</strong> — Checklist for sheets/publish (extend when your Civil API path is fixed).</li>
+      <li><strong>M7</strong> — BOQ CSV from volumes + marking layer solids + signage layer counts.</li>
+    </ol>
+  </div>
+
+  <div class="section" id="manual-auto">
+    <div class="section-label">Responsibility split</div>
+    <h2>Manual vs automated — full detail</h2>
+    <p>Use the legend when reading the tables below.</p>
+    <div class="legend">
+      <span class="lg"><span class="dot manual"></span> Mostly or entirely <strong>manual</strong> (human decision or one-off setup)</span>
+      <span class="lg"><span class="dot auto"></span> Mostly <strong>automated</strong> by script once inputs exist</span>
+      <span class="lg"><span class="dot mix"></span> <strong>Mixed</strong> (script applies rules; you supply data and approve)</span>
+    </div>
+
+    <h3>High-level pipeline</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Stage</th><th>Automated by</th><th>Manual</th><th>Mixed / notes</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Standards &amp; contract BOQ mapping</td>
+            <td class="td-manual">—</td>
+            <td class="td-auto">You</td>
+            <td class="td-mix">Pay-item CSV encodes your mapping; script does not invent contract items.</td>
+          </tr>
+          <tr>
+            <td>Template DWT / styles / blocks</td>
+            <td class="td-manual">—</td>
+            <td class="td-auto">CAD manager</td>
+            <td class="td-mix">Once per template; scripts assume names exist.</td>
+          </tr>
+          <tr>
+            <td>Horizontal alignment geometry</td>
+            <td class="td-auto">M1 (PI table → alignment)</td>
+            <td class="td-manual">Curve/spiral geometry if you need true curve groups (M1 is line-chain by default)</td>
+            <td class="td-mix">PI coordinates and design speed in CSV.</td>
+          </tr>
+          <tr>
+            <td>Vertical profile</td>
+            <td class="td-auto">M2 (tangents + optional parabolas)</td>
+            <td class="td-manual">Choosing K-values / curve lengths in engineering sense</td>
+            <td class="td-mix">CSV supplies stations, elevations, lengths; script runs grade QA.</td>
+          </tr>
+          <tr>
+            <td>Corridor regions</td>
+            <td class="td-auto">M3 (Add regions from CSV)</td>
+            <td class="td-manual">Subassembly width/target binding beyond regions (extend script)</td>
+            <td class="td-mix">Assembly must exist; station ranges from CSV.</td>
+          </tr>
+          <tr>
+            <td>Volumes</td>
+            <td class="td-auto">M4 (rebuild + TIN volume + CSV)</td>
+            <td class="td-manual">Surface quality, boundaries, datum choices</td>
+            <td class="td-mix">EG/FG names must match drawing.</td>
+          </tr>
+          <tr>
+            <td>Pavement markings</td>
+            <td class="td-auto">Marking script (dash/gap solids, union, XData)</td>
+            <td class="td-manual">Draw source 3D polyline/feature line; pick type in Player</td>
+            <td class="td-mix">Re-run replaces old solid automatically.</td>
+          </tr>
+          <tr>
+            <td>Signage</td>
+            <td class="td-auto">M5 (CSV → blocks, tangent rotation)</td>
+            <td class="td-manual">Block library content; sign policy in schedule</td>
+            <td class="td-mix">Schedule is human-authored data.</td>
+          </tr>
+          <tr>
+            <td>Sheets / PDF issue</td>
+            <td class="td-manual">Mostly manual / M6 checklist</td>
+            <td class="td-auto">—</td>
+            <td class="td-mix">Publish automation is version-sensitive; extend M6 when stable.</td>
+          </tr>
+          <tr>
+            <td>BOQ roll-up</td>
+            <td class="td-auto">M7 (CSV from volumes + solids + counts)</td>
+            <td class="td-manual">Commercial review, rounding rules, progress claims</td>
+            <td class="td-mix">Marking length uses a geometric proxy; refine for payment accuracy if needed.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Per-module detail</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Module</th><th>What the script automates</th><th>What stays manual</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>M1</strong></td>
+            <td class="td-auto">Reads PI CSV; creates alignment; chained fixed lines; optional design speed stamp; duplicate-name check.</td>
+            <td class="td-manual">PI locations and radii in CSV; true curve/spiral layout if not using line-only mode; template styles.</td>
+          </tr>
+          <tr>
+            <td><strong>M2</strong></td>
+            <td class="td-auto">Creates FG profile by layout; adds tangents from CSV; grade QA messages; attempts vertical curves when length &gt; 0.</td>
+            <td class="td-manual">Profile/layer/style names in template; engineering acceptance of grades and curves.</td>
+          </tr>
+          <tr>
+            <td><strong>M3</strong></td>
+            <td class="td-auto">Adds baseline regions from CSV; corridor rebuild.</td>
+            <td class="td-manual">Assembly design; per-subassembly widths and offset targets (extend API).</td>
+          </tr>
+          <tr>
+            <td><strong>M4</strong></td>
+            <td class="td-auto">Corridor rebuild; TIN volume surface; cut/fill/net CSV.</td>
+            <td class="td-manual">Surface definitions, EG/FG correctness, corridor model QA.</td>
+          </tr>
+          <tr>
+            <td><strong>Marking</strong></td>
+            <td class="td-auto">Dash pattern from standard table; solids; layer; XData; delete-on-regenerate.</td>
+            <td class="td-manual">Source line geometry and Z; type selection; optional width override.</td>
+          </tr>
+          <tr>
+            <td><strong>M5</strong></td>
+            <td class="td-auto">Erases prior run (same XData app); places blocks; tangent-based rotation.</td>
+            <td class="td-manual">Block definitions; schedule content; offset/sign codes.</td>
+          </tr>
+          <tr>
+            <td><strong>M6</strong></td>
+            <td class="td-auto">Checklist string and optional output folder creation.</td>
+            <td class="td-manual">View frames, sheet sets, publish — implement when API chosen.</td>
+          </tr>
+          <tr>
+            <td><strong>M7</strong></td>
+            <td class="td-auto">Merges volume CSV + marking solids on layer + signage counts into BOQ CSV via pay-item map.</td>
+            <td class="td-manual">Pay-item dictionary; verifying quantities against contract; corridor material API extension if required.</td>
+          </tr>
+          <tr>
+            <td><strong>M8</strong></td>
+            <td class="td-auto">Loads JSON; resolves paths; runs M1–M7 in order; appends QA log.</td>
+            <td class="td-manual">Correct absolute path to JSON; fixing any step that returns ERROR.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section" id="modules">
+    <div class="section-label">Reference</div>
+    <h2>Quick module reference</h2>
+    <ul>
+      <li><strong>M1</strong> — <code>python/m1_alignment_from_csv.py</code> — Inputs: CSV path, alignment name, style, label set, start station.</li>
+      <li><strong>M2</strong> — <code>m2_profile_from_csv.py</code> — Inputs: CSV, alignment name, profile name, layer, profile style, label set, max/min grade for QA.</li>
+      <li><strong>M3</strong> — <code>m3_corridor_regions_from_csv.py</code> — Inputs: CSV, corridor name, default assembly name.</li>
+      <li><strong>M4</strong> — <code>m4_corridor_rebuild_volumes.py</code> — Inputs: corridor, EG surface name, FG surface name, output CSV path, optional volume surface name.</li>
+      <li><strong>M5</strong> — <code>m5_signage_from_csv.py</code> — Inputs: CSV, alignment, layer, optional XData app name.</li>
+      <li><strong>M6</strong> — <code>m6_sheets_helper.py</code> — Inputs: alignment name, output directory (informational).</li>
+      <li><strong>M7</strong> — <code>m7_boq_rollup.py</code> — Inputs: optional M4 volumes CSV path, marking layer, signage layer, payitems CSV, BOQ output CSV.</li>
+      <li><strong>M8</strong> — <code>m8_run_all.py</code> — Inputs: absolute <code>project.json</code> path; optional step filter string.</li>
+    </ul>
+    <p>Exact <code>IN[…]</code> order is always at the top of each <code>.py</code> file.</p>
+  </div>
+
+  <div class="section" id="troubleshoot">
+    <div class="section-label">Support</div>
+    <h2>Troubleshooting and versioning</h2>
+    <ul>
+      <li><strong>ERROR: style / layer / alignment not found</strong> — Open template; align names with <code>project.json</code> and the script inputs.</li>
+      <li><strong>ERROR: alignment or profile already exists</strong> — Rename in Civil or delete the object before re-running M1/M2.</li>
+      <li><strong>M4 volume fails</strong> — Confirm both surfaces are valid TINs (or types accepted by <code>TinVolumeSurface.Create</code> for your version).</li>
+      <li><strong>M5 missing blocks</strong> — Insert block definitions into the template; names must match CSV exactly.</li>
+      <li><strong>After Civil 3D upgrade</strong> — Re-test one module at a time; update <code>API_NOTES.md</code> with any signature changes.</li>
+    </ul>
+    <div class="alert">
+      <strong>Single source of truth for numbers:</strong> keep CSV and JSON under revision control with the drawing issue. The automation replay is only as good as the data you feed it.
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  Road automation user guide · Civil 3D + Dynamo · companion to road_marking_dynamo.html &amp; civil3d_automation/
+</div>
+
+</body>
+</html>

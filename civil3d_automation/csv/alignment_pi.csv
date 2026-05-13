@@ -1,0 +1,5 @@
+pi_id,easting,northing,radius_m,spiral_in_m,spiral_out_m,design_speed_kph
+A1,5000.000,8000.000,0,0,0,80
+A2,5200.000,8120.000,0,0,0,80
+A3,5450.000,8180.000,0,0,0,80
+A4,5700.000,8300.000,0,0,0,80

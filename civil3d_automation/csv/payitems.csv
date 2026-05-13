@@ -1,0 +1,8 @@
+source,key,pay_item,description,unit
+volumes,cut_m3,2.01,Earthwork cut (volume surface),m3
+volumes,fill_m3,2.02,Earthwork fill (volume surface),m3
+volumes,net_m3,2.03,Earthwork net (volume surface),m3
+marking,M1,5.01,Centre line dashed M1,m
+marking,M2,5.02,Barrier line M2,m
+signage,SGN_STOP,6.01,Stop sign 600mm,each
+signage,SGN_SPEED_50,6.02,Speed limit 50 sign,each

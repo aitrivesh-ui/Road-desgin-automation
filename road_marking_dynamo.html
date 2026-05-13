@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Road Design Automation — Civil 3D Hub</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;800&display=swap');
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #141720;
+    --surface2: #1c2030;
+    --border: #252a3a;
+    --accent: #f0a500;
+    --accent2: #3ecfcf;
+    --accent3: #e04545;
+    --text: #dde3f0;
+    --muted: #6b7590;
+    --code-bg: #0a0c10;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #0d0f14 0%, #141a2e 50%, #0d0f14 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 3rem 2rem 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -60px; left: -40px;
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, rgba(240,165,0,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; right: -40px;
+    width: 280px; height: 280px;
+    background: radial-gradient(circle, rgba(62,207,207,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid rgba(240,165,0,0.3);
+    border-radius: 3px;
+    padding: 0.25rem 0.65rem;
+    margin-bottom: 1rem;
+  }
+
+  h1 {
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 800;
+    line-height: 1.1;
+    max-width: 700px;
+    background: linear-gradient(120deg, #dde3f0 30%, #f0a500 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    margin-top: 1rem;
+    color: var(--muted);
+    font-size: 1rem;
+    max-width: 600px;
+    font-weight: 400;
+  }
+
+  .tags {
+    display: flex; flex-wrap: wrap; gap: 0.5rem;
+    margin-top: 1.5rem;
+  }
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0.2rem 0.6rem;
+    color: var(--accent2);
+  }
+
+  /* Layout */
+  .container { max-width: 960px; margin: 0 auto; padding: 2rem; }
+
+  /* In-page TOC */
+  .toc-nav {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem 1.1rem;
+    margin-bottom: 2.5rem;
+    font-size: 0.82rem;
+  }
+  .toc-nav-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.65rem;
+  }
+  .toc-nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem 0.85rem;
+    align-items: center;
+    line-height: 1.5;
+  }
+  .toc-nav a {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent2);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+  }
+  .toc-nav a:hover {
+    color: var(--accent);
+    border-bottom-color: rgba(240, 165, 0, 0.4);
+  }
+  .toc-nav span.sep {
+    color: var(--border);
+    user-select: none;
+    font-size: 0.65rem;
+  }
+
+  /* Section */
+  .section { margin-bottom: 3rem; }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  h2 {
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 1rem;
+  }
+
+  h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--accent2);
+    margin: 1.5rem 0 0.5rem;
+  }
+
+  p { color: var(--text); margin-bottom: 0.85rem; font-size: 0.97rem; }
+
+  /* Cards */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin: 1.25rem 0;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+  }
+  .card.teal::before { background: linear-gradient(90deg, var(--accent2), transparent); }
+  .card.red::before { background: linear-gradient(90deg, var(--accent3), transparent); }
+  .card.gold::before { background: linear-gradient(90deg, rgba(240,165,0,0.95), transparent); }
+
+  .card-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--accent);
+    opacity: 0.25;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+  .card.teal .card-num { color: var(--accent2); }
+  .card.red .card-num { color: var(--accent3); }
+
+  .card-title { font-size: 0.9rem; font-weight: 600; color: #fff; margin-bottom: 0.4rem; }
+  .card-text { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+
+  /* Flow steps */
+  .flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 1.25rem 0;
+  }
+
+  .flow-step {
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .flow-connector {
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    gap: 1rem;
+  }
+  .flow-line {
+    width: 2px;
+    height: 28px;
+    background: linear-gradient(to bottom, var(--border), transparent);
+    margin: 0 auto;
+  }
+
+  .step-num {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .step-content { padding-top: 0.4rem; }
+  .step-title { font-size: 0.92rem; font-weight: 600; color: #fff; margin-bottom: 0.2rem; }
+  .step-desc { font-size: 0.82rem; color: var(--muted); }
+
+  /* Code block */
+  .code-wrap {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 1.25rem 0;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 1rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .code-title {
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .copy-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--accent2);
+    background: transparent;
+    border: 1px solid rgba(62,207,207,0.3);
+    border-radius: 3px;
+    padding: 0.2rem 0.6rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .copy-btn:hover { background: rgba(62,207,207,0.1); }
+  .copy-btn.copied { color: #5ce65c; border-color: rgba(92,230,92,0.3); }
+
+  pre {
+    padding: 1.25rem;
+    overflow-x: auto;
+    font-size: 0.8rem;
+    line-height: 1.65;
+    color: #c5cfdf;
+  }
+
+  /* Token colors */
+  .kw { color: #c792ea; }
+  .fn { color: #82aaff; }
+  .str { color: #c3e88d; }
+  .num { color: #f78c6c; }
+  .cm { color: #546e7a; font-style: italic; }
+  .cls { color: #ffcb6b; }
+  .op { color: #89ddff; }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; margin: 1rem 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.83rem;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  th {
+    background: var(--surface2);
+    color: var(--accent);
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.6rem 0.9rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.55rem 0.9rem;
+    border-bottom: 1px solid rgba(37,42,58,0.6);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tr:hover td { background: var(--surface); }
+  .td-name { color: var(--accent2); }
+  .td-note { color: var(--muted); font-size: 0.76rem; }
+
+  /* Alert */
+  .alert {
+    border-left: 3px solid var(--accent);
+    background: rgba(240,165,0,0.06);
+    border-radius: 0 5px 5px 0;
+    padding: 0.9rem 1rem;
+    margin: 1.25rem 0;
+    font-size: 0.87rem;
+  }
+  .alert.teal { border-color: var(--accent2); background: rgba(62,207,207,0.06); }
+  .alert strong { color: var(--accent); }
+  .alert.teal strong { color: var(--accent2); }
+
+  /* Diagram */
+  .diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.5rem;
+    margin: 1.25rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
+  }
+
+  .dia-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 0.55rem 0.9rem;
+    font-size: 0.78rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text);
+    text-align: center;
+    white-space: nowrap;
+  }
+  .dia-box.gold { border-color: rgba(240,165,0,0.5); color: var(--accent); }
+  .dia-box.teal { border-color: rgba(62,207,207,0.4); color: var(--accent2); }
+  .dia-box.red { border-color: rgba(224,69,69,0.4); color: var(--accent3); }
+
+  .dia-arrow {
+    font-size: 0.9rem;
+    color: var(--border);
+    padding: 0 0.4rem;
+  }
+
+  /* Marking vis */
+  .marking-vis {
+    background: #0a0c10;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.5rem;
+    margin: 1.25rem 0;
+  }
+
+  .road-strip {
+    background: #1a1a1a;
+    border-radius: 4px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    gap: 0;
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+    position: relative;
+  }
+
+  .road-strip::before, .road-strip::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    height: 2px;
+    background: #333;
+  }
+  .road-strip::before { top: 8px; }
+  .road-strip::after { bottom: 8px; }
+
+  .mark-seg {
+    height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .mark-gap { flex-shrink: 0; }
+
+  .vis-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-bottom: 0.35rem;
+  }
+
+  /* Footer */
+  .footer {
+    border-top: 1px solid var(--border);
+    padding: 1.5rem 2rem;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  @media (max-width: 600px) {
+    .diagram { flex-direction: column; }
+    .dia-arrow { transform: rotate(90deg); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="max-width:960px; margin:0 auto; padding:0 2rem;">
+    <div class="badge">Civil 3D Automation Hub</div>
+    <h1>Road Design Automation<br>in Civil 3D</h1>
+    <p class="subtitle">End-to-end workflow reference: alignments, profiles, corridors, deliverables, quantities — plus a working Dynamo and Python module for standards-based pavement markings.</p>
+    <div class="tags">
+      <span class="tag">Autodesk Civil 3D</span>
+      <span class="tag">Alignment &amp; Profile</span>
+      <span class="tag">Corridor &amp; QTO</span>
+      <span class="tag">Dynamo &amp; Python</span>
+      <span class="tag">SN 640850A</span>
+      <span class="tag">Sheets &amp; BOQ</span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <nav class="toc-nav" aria-label="Page sections">
+    <div class="toc-nav-title">On this page</div>
+    <div class="toc-nav-links">
+      <a href="#road-design-pipeline">Pipeline</a><span class="sep">·</span>
+      <a href="#marking-module">Markings</a><span class="sep">·</span>
+      <a href="#horizontal-alignment">Horizontal</a><span class="sep">·</span>
+      <a href="#vertical-profile">Vertical</a><span class="sep">·</span>
+      <a href="#cross-sections">Cross-sections</a><span class="sep">·</span>
+      <a href="#corridor-earthworks">Corridor</a><span class="sep">·</span>
+      <a href="#signage-furniture">Signage</a><span class="sep">·</span>
+      <a href="#sheets-dpr">Sheets &amp; DPR</a><span class="sep">·</span>
+      <a href="#quantities-boq">Quantities &amp; BOQ</a><span class="sep">·</span>
+      <a href="#automation-summary">Summary table</a><span class="sep">·</span>
+      <a href="#setup">Setup</a><span class="sep">·</span>
+      <a href="road_automation_advanced.html" style="color:var(--accent);">Advanced modules →</a><span class="sep">·</span>
+      <a href="civil3d_automation/README.md" style="color:var(--accent2);">M1–M8 package</a><span class="sep">·</span>
+      <a href="road_automation_user_guide.html" style="color:var(--accent2);">User guide</a><span class="sep">·</span>
+      <a href="road_automation_beginners.html" style="color:var(--accent2);">Beginner primer</a>
+    </div>
+  </nav>
+
+  <!-- Road design pipeline overview -->
+  <div class="section" id="road-design-pipeline">
+    <div class="section-label">Overview</div>
+    <h2>Road design pipeline</h2>
+    <p>Full road design in Civil 3D chains native objects from horizontal control through construction documentation. Automate each stage with the right tool: built-in styles and criteria, Dynamo graphs, corridor tools, exports to spreadsheets, and optional .NET when you need tight transaction control.</p>
+
+    <div class="diagram">
+      <div class="dia-box gold">Alignment</div>
+      <div class="dia-arrow">→</div>
+      <div class="dia-box">Profile</div>
+      <div class="dia-arrow">→</div>
+      <div class="dia-box teal">Assembly /<br>XS</div>
+      <div class="dia-arrow">→</div>
+      <div class="dia-box">Corridor</div>
+      <div class="dia-arrow">→</div>
+      <div class="dia-box teal">Surfaces /<br>Volumes</div>
+      <div class="dia-arrow">→</div>
+      <div class="dia-box">Annotation</div>
+      <div class="dia-arrow">→</div>
+      <div class="dia-box gold">Sheets</div>
+      <div class="dia-arrow">→</div>
+      <div class="dia-box red">BOQ / Export</div>
+    </div>
+
+    <div class="alert teal">
+      <strong>Markings in this pipeline:</strong> Longitudinal markings (below) work best when driven from <strong>feature lines</strong> or <strong>offsets from an alignment or corridor</strong> so dash geometry follows real curvature and grade. Jump to <a href="#marking-module" style="color:var(--accent2);">Marking module</a> for the Dynamo and Python reference.
+    </div>
+  </div>
+
+  <!-- How it works conceptually -->
+  <div class="section" id="marking-module">
+    <div class="section-label">Architecture</div>
+    <h2>How it works end-to-end</h2>
+    <p>The script has three distinct layers: geometry reading, solid construction, and Civil 3D object writing. Dynamo bridges all three without leaving the Civil 3D session.</p>
+
+    <div class="diagram">
+      <div class="dia-box gold">3D Polyline /<br>Feature Line</div>
+      <div class="dia-arrow">→</div>
+      <div class="dia-box">Sample Points<br>+ Tangents</div>
+      <div class="dia-arrow">→</div>
+      <div class="dia-box teal">Dash/Gap<br>Segmentation</div>
+      <div class="dia-arrow">→</div>
+      <div class="dia-box">Sweep Profile<br>per Segment</div>
+      <div class="dia-arrow">→</div>
+      <div class="dia-box teal">Boolean Union<br>(all dashes)</div>
+      <div class="dia-arrow">→</div>
+      <div class="dia-box gold">Single Civil 3D<br>Solid Object</div>
+    </div>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-num">01</div>
+        <div class="card-title">Read Source Geometry</div>
+        <div class="card-text">Extract vertices, station distances, and tangent vectors from the selected 3D polyline or feature line via the Civil 3D COM API.</div>
+      </div>
+      <div class="card teal">
+        <div class="card-num">02</div>
+        <div class="card-title">Apply Dash Pattern</div>
+        <div class="card-text">Walk the line by cumulative distance, splitting it into ON (dash) and OFF (gap) intervals per the SN 640850A lookup table for the chosen type.</div>
+      </div>
+      <div class="card red">
+        <div class="card-num">03</div>
+        <div class="card-title">Sweep & Union</div>
+        <div class="card-text">For each dash segment: create a rectangular profile, sweep it along the sub-curve, then Boolean-union all swept solids into one object.</div>
+      </div>
+      <div class="card teal">
+        <div class="card-num">04</div>
+        <div class="card-title">Write & Link</div>
+        <div class="card-text">Write the solid to the DWG as a Civil 3D feature, store the source object Handle as XData, enabling re-run regeneration without manual selection.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SN 640850A table -->
+  <div class="section">
+    <div class="section-label">Standard Reference</div>
+    <h2>SN 640850A Marking Types — Lookup Table</h2>
+    <p>These values drive the dropdown menu. Each type has a dash length, gap length, width, and thickness. Adjust to match your national standard (e.g. IRC, MUTCD, etc.).</p>
+
+    <div class="marking-vis">
+      <div class="vis-label">Type M1 — Dashed centre line (3.0m dash / 9.0m gap)</div>
+      <div class="road-strip" id="vis-m1"></div>
+      <div class="vis-label">Type M2 — Barrier solid line (continuous)</div>
+      <div class="road-strip" id="vis-m2"></div>
+      <div class="vis-label">Type M4 — Short dashes / give-way (1.0m dash / 1.0m gap)</div>
+      <div class="road-strip" id="vis-m4"></div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Dash (m)</th>
+            <th>Gap (m)</th>
+            <th>Width (m)</th>
+            <th>Thick (m)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="td-name">M1</td><td>Dashed centre line</td><td>3.0</td><td>9.0</td><td>0.12</td><td>0.006</td></tr>
+          <tr><td class="td-name">M2</td><td>Solid barrier line</td><td>—</td><td>—</td><td>0.15</td><td>0.006</td></tr>
+          <tr><td class="td-name">M3</td><td>Double solid line</td><td>—</td><td>—</td><td>0.15</td><td>0.006</td></tr>
+          <tr><td class="td-name">M4</td><td>Short dashes / give-way</td><td>1.0</td><td>1.0</td><td>0.30</td><td>0.006</td></tr>
+          <tr><td class="td-name">M5</td><td>Warning dashes</td><td>1.0</td><td>3.0</td><td>0.12</td><td>0.006</td></tr>
+          <tr><td class="td-name">M6</td><td>Edge line solid</td><td>—</td><td>—</td><td>0.12</td><td>0.006</td></tr>
+          <tr><td class="td-name">M7</td><td>Wide edge / safety zone</td><td>—</td><td>—</td><td>0.25</td><td>0.006</td></tr>
+          <tr><td class="td-name">M8</td><td>Zigzag / no-wait</td><td>1.5</td><td>0.5</td><td>0.10</td><td>0.006</td></tr>
+          <tr><td class="td-name">M9</td><td>Stop line (wide)</td><td>—</td><td>—</td><td>0.50</td><td>0.006</td></tr>
+          <tr><td class="td-name">M10</td><td>Zebra crossing stripe</td><td>—</td><td>—</td><td>0.50</td><td>0.006</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Workflow steps -->
+  <div class="section">
+    <div class="section-label">Workflow</div>
+    <h2>User workflow inside Civil 3D</h2>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Draw the 3D Polyline or Feature Line</div>
+          <div class="step-desc">Assign Z-elevations to all vertices. Feature lines are preferred — they carry chainage data and can follow a corridor baseline exactly.</div>
+        </div>
+      </div>
+      <div class="flow-connector"><div class="flow-line"></div><div></div></div>
+      <div class="flow-step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Open the Dynamo Player</div>
+          <div class="step-desc">Launch the graph from the Civil 3D Manage tab → Dynamo Player. No need to open the full Dynamo editor each time.</div>
+        </div>
+      </div>
+      <div class="flow-connector"><div class="flow-line"></div><div></div></div>
+      <div class="flow-step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Select the line, choose type & width</div>
+          <div class="step-desc">A Select Object node prompts you to click the line. A Dropdown node lists M1–M10. An optional Number Slider overrides the default width.</div>
+        </div>
+      </div>
+      <div class="flow-connector"><div class="flow-line"></div><div></div></div>
+      <div class="flow-step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">Run</div>
+          <div class="step-desc">Click Run. The Python Script node executes, creates the solid, and writes it to a dedicated layer (e.g. <code style="color:var(--accent2); font-family:'JetBrains Mono',monospace">C-ROAD-MARK</code>).</div>
+        </div>
+      </div>
+      <div class="flow-connector"><div class="flow-line"></div><div></div></div>
+      <div class="flow-step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <div class="step-title">Re-run after line edits</div>
+          <div class="step-desc">Edit the source polyline grip points. Re-run the graph — the script finds the old solid via its XData handle, deletes it, and regenerates. No manual cleanup.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dynamo graph structure -->
+  <div class="section">
+    <div class="section-label">Dynamo Graph</div>
+    <h2>Node structure of the Dynamo graph</h2>
+    <p>The graph is deliberately thin — almost all logic lives in one Python Script node. The surrounding nodes handle UI input and Civil 3D object selection only.</p>
+
+    <div class="alert teal">
+      <strong>Tip:</strong> Keep the graph shallow. Heavy logic in Python Script nodes is far easier to version-control (copy/paste the script text) than complex node wiring.
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-title">Dynamo Node Layout (logical)</span>
+      </div>
+      <pre>
+<span class="cm"># ── INPUT NODES ──────────────────────────────────────────────</span>
+Select Object Node          <span class="cm">→ source_obj    (AeccFeatureLine or AcDb3dPolyline)</span>
+Dropdown (Code Block)       <span class="cm">→ mark_type     "M1" | "M2" | ... | "M10"</span>
+Number Slider (optional)    <span class="cm">→ width_override (0 = use standard default)</span>
+
+<span class="cm"># ── PROCESSING ───────────────────────────────────────────────</span>
+Python Script Node          <span class="cm">→ solid_handle  (XData handle string)</span>
+  inputs:  source_obj, mark_type, width_override
+  output:  result_message
+
+<span class="cm"># ── OUTPUT ───────────────────────────────────────────────────</span>
+Watch Node                  <span class="cm">→ shows result_message to user</span></pre>
+    </div>
+  </div>
+
+  <!-- Full Python script -->
+  <div class="section">
+    <div class="section-label">Python Script Node</div>
+    <h2>Full Python script — paste into the Python Script node</h2>
+    <p>Uses the IronPython 2.7 runtime bundled with Dynamo for Civil 3D. Accesses AutoCAD COM via <code style="color:var(--accent2); font-family:'JetBrains Mono',monospace">clr</code> and <code style="color:var(--accent2); font-family:'JetBrains Mono',monospace">Autodesk.AutoCAD.ApplicationServices</code>.</p>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-title">road_marking.py — Python Script Node</span>
+        <button class="copy-btn" onclick="copyCode(this, 'main-code')">Copy</button>
+      </div>
+      <pre id="main-code"><span class="cm"># ============================================================
+# Road Marking Generator — Dynamo Python Script Node
+# Standard: SN 640850A (adapt constants for other standards)
+# Author:   Your Name / Your Firm
+# Requires: Civil 3D 2022+ with Dynamo 2.x, IronPython 2.7
+# ============================================================</span>
+
+<span class="kw">import</span> clr
+<span class="kw">import</span> sys
+<span class="kw">import</span> math
+
+clr.AddReference(<span class="str">'AcMgd'</span>)
+clr.AddReference(<span class="str">'AcDbMgd'</span>)
+clr.AddReference(<span class="str">'AecBaseMgd'</span>)
+clr.AddReference(<span class="str">'AeccDbMgd'</span>)   <span class="cm"># Civil 3D objects</span>
+
+<span class="kw">from</span> Autodesk.AutoCAD.ApplicationServices <span class="kw">import</span> Application
+<span class="kw">from</span> Autodesk.AutoCAD.DatabaseServices <span class="kw">import</span> (
+    Transaction, OpenMode, Polyline3d, Entity,
+    BlockTableRecord, ResultBuffer, TypedValue,
+    DxfCode, SolidHistoryMode
+)
+<span class="kw">from</span> Autodesk.AutoCAD.Geometry <span class="kw">import</span> (
+    Point3d, Vector3d, Plane, Matrix3d
+)
+<span class="kw">from</span> Autodesk.Civil.DatabaseServices <span class="kw">import</span> FeatureLine
+
+<span class="cm"># ── DYNAMO INPUTS ─────────────────────────────────────────────
+# IN[0]: selected Civil 3D object (from Select Object node)
+# IN[1]: marking type string  e.g. "M1"
+# IN[2]: width override float (0 = use standard default)</span>
+
+source_obj     = IN[<span class="num">0</span>]   <span class="cm"># Dynamo-unwrapped element</span>
+mark_type      = IN[<span class="num">1</span>]   <span class="cm"># e.g. "M1"</span>
+width_override = IN[<span class="num">2</span>]   <span class="cm"># 0.0 means use default</span>
+
+<span class="cm"># ── MARKING STANDARD LOOKUP TABLE (SN 640850A) ───────────────
+# Keys:  type name
+# Values: (dash_m, gap_m, default_width_m, thickness_m)
+#         dash_m = 0 → continuous solid line</span>
+
+STANDARDS = {
+    <span class="str">"M1"</span>:  (<span class="num">3.0</span>,  <span class="num">9.0</span>,  <span class="num">0.12</span>, <span class="num">0.006</span>),
+    <span class="str">"M2"</span>:  (<span class="num">0</span>,    <span class="num">0</span>,    <span class="num">0.15</span>, <span class="num">0.006</span>),  <span class="cm"># solid</span>
+    <span class="str">"M3"</span>:  (<span class="num">0</span>,    <span class="num">0</span>,    <span class="num">0.15</span>, <span class="num">0.006</span>),  <span class="cm"># solid (double handled externally)</span>
+    <span class="str">"M4"</span>:  (<span class="num">1.0</span>,  <span class="num">1.0</span>,  <span class="num">0.30</span>, <span class="num">0.006</span>),
+    <span class="str">"M5"</span>:  (<span class="num">1.0</span>,  <span class="num">3.0</span>,  <span class="num">0.12</span>, <span class="num">0.006</span>),
+    <span class="str">"M6"</span>:  (<span class="num">0</span>,    <span class="num">0</span>,    <span class="num">0.12</span>, <span class="num">0.006</span>),
+    <span class="str">"M7"</span>:  (<span class="num">0</span>,    <span class="num">0</span>,    <span class="num">0.25</span>, <span class="num">0.006</span>),
+    <span class="str">"M8"</span>:  (<span class="num">1.5</span>,  <span class="num">0.5</span>,  <span class="num">0.10</span>, <span class="num">0.006</span>),
+    <span class="str">"M9"</span>:  (<span class="num">0</span>,    <span class="num">0</span>,    <span class="num">0.50</span>, <span class="num">0.006</span>),
+    <span class="str">"M10"</span>: (<span class="num">0</span>,    <span class="num">0</span>,    <span class="num">0.50</span>, <span class="num">0.006</span>),
+}
+
+MARK_LAYER  = <span class="str">"C-ROAD-MARK"</span>
+XDATA_APP   = <span class="str">"ROAD_MARK_SRC"</span>   <span class="cm"># registered app name for XData</span>
+
+<span class="cm"># ── HELPERS ───────────────────────────────────────────────────</span>
+
+<span class="kw">def</span> <span class="fn">get_polyline_points</span>(tr, obj_id):
+    <span class="str">"""Return list of Point3d from a 3dPolyline or FeatureLine."""</span>
+    obj = tr.GetObject(obj_id, OpenMode.ForRead)
+    pts = []
+    <span class="kw">if</span> isinstance(obj, FeatureLine):
+        <span class="kw">for</span> i <span class="kw">in</span> range(obj.PointsCount):
+            pts.append(obj.GetPoint(i))
+    <span class="kw">elif</span> isinstance(obj, Polyline3d):
+        <span class="kw">for</span> vtx_id <span class="kw">in</span> obj:
+            vtx = tr.GetObject(vtx_id, OpenMode.ForRead)
+            pts.append(vtx.Position)
+    <span class="kw">return</span> pts
+
+
+<span class="kw">def</span> <span class="fn">segment_lengths</span>(pts):
+    <span class="str">"""Return list of (cumulative_start, length, pt_a, pt_b)."""</span>
+    segs = []
+    cum = <span class="num">0.0</span>
+    <span class="kw">for</span> i <span class="kw">in</span> range(len(pts) - <span class="num">1</span>):
+        a, b = pts[i], pts[i+<span class="num">1</span>]
+        d = a.DistanceTo(b)
+        segs.append((cum, d, a, b))
+        cum += d
+    <span class="kw">return</span> segs, cum
+
+
+<span class="kw">def</span> <span class="fn">lerp_point</span>(a, b, t):
+    <span class="str">"""Linearly interpolate between two Point3d values."""</span>
+    <span class="kw">return</span> Point3d(
+        a.X + (b.X - a.X) * t,
+        a.Y + (b.Y - a.Y) * t,
+        a.Z + (b.Z - a.Z) * t,
+    )
+
+
+<span class="kw">def</span> <span class="fn">point_at_distance</span>(segs, dist):
+    <span class="str">"""Return Point3d at a given cumulative distance along segments."""</span>
+    <span class="kw">for</span> (cum_s, seg_d, a, b) <span class="kw">in</span> segs:
+        <span class="kw">if</span> dist <= cum_s + seg_d + <span class="num">1e-6</span>:
+            t = (dist - cum_s) / seg_d <span class="kw">if</span> seg_d > <span class="num">0</span> <span class="kw">else</span> <span class="num">0</span>
+            <span class="kw">return</span> lerp_point(a, b, max(<span class="num">0</span>, min(<span class="num">1</span>, t)))
+    <span class="kw">return</span> segs[<span class="num">-1</span>][<span class="num">3</span>]   <span class="cm"># end of line</span>
+
+
+<span class="kw">def</span> <span class="fn">build_dash_intervals</span>(total_len, dash, gap):
+    <span class="str">"""
+    Return list of (start_dist, end_dist) for each ON segment.
+    If dash == 0: single interval spanning full length (solid).
+    """</span>
+    intervals = []
+    <span class="kw">if</span> dash == <span class="num">0</span>:
+        intervals.append((<span class="num">0.0</span>, total_len))
+        <span class="kw">return</span> intervals
+    cycle = dash + gap
+    pos = <span class="num">0.0</span>
+    <span class="kw">while</span> pos < total_len:
+        end = min(pos + dash, total_len)
+        <span class="kw">if</span> end - pos > <span class="num">0.01</span>:   <span class="cm"># skip slivers</span>
+            intervals.append((pos, end))
+        pos += cycle
+    <span class="kw">return</span> intervals
+
+
+<span class="kw">def</span> <span class="fn">create_box_solid</span>(db, tr, msp, pt_a, pt_b, width, thickness):
+    <span class="str">"""
+    Create a 3D Solid box representing one dash segment.
+    The box is oriented along the vector pt_a → pt_b,
+    width is perpendicular in the XY plane, thickness is in Z.
+    Returns the ObjectId of the created solid.
+    """</span>
+    vec = Vector3d(pt_b.X - pt_a.X, pt_b.Y - pt_a.Y, pt_b.Z - pt_a.Z)
+    length = vec.Length
+    <span class="kw">if</span> length < <span class="num">0.001</span>:
+        <span class="kw">return</span> <span class="kw">None</span>
+    vec = vec.GetNormal()
+
+    <span class="cm"># Local coordinate system</span>
+    up    = Vector3d.ZAxis
+    right = vec.CrossProduct(up).GetNormal()   <span class="cm"># width direction</span>
+    <span class="kw">if</span> right.Length < <span class="num">0.5</span>:                       <span class="cm"># vec nearly vertical</span>
+        right = Vector3d.XAxis
+
+    hw = width / <span class="num">2.0</span>
+
+    <span class="cm"># Eight corners of the box</span>
+    corners = [
+        pt_a + right * hw,
+        pt_a - right * hw,
+        pt_b - right * hw,
+        pt_b + right * hw,
+    ]
+
+    <span class="cm"># Build solid via Acad3DSolid (box method is simpler via COM;
+    # here we use the managed API's AddBox then transform)</span>
+    solid = Autodesk.AutoCAD.DatabaseServices.Solid3d()
+    solid.CreateBox(length, width, thickness)
+
+    <span class="cm"># Build transform: origin at midpoint, X along vec</span>
+    mid = Point3d(
+        (pt_a.X + pt_b.X) / <span class="num">2</span>,
+        (pt_a.Y + pt_b.Y) / <span class="num">2</span>,
+        (pt_a.Z + pt_b.Z) / <span class="num">2</span> + thickness / <span class="num">2</span>,
+    )
+    mat = Matrix3d.AlignCoordinateSystem(
+        Point3d.Origin, Vector3d.XAxis, Vector3d.YAxis, Vector3d.ZAxis,
+        mid, vec, right, Vector3d.ZAxis
+    )
+    solid.TransformBy(mat)
+
+    solid.Layer = MARK_LAYER
+    solid.ColorIndex = <span class="num">7</span>   <span class="cm"># White</span>
+
+    msp.AppendEntity(solid)
+    tr.AddNewlyCreatedDBObject(solid, <span class="kw">True</span>)
+    <span class="kw">return</span> solid.ObjectId
+
+
+<span class="kw">def</span> <span class="fn">delete_old_solid</span>(db, tr, msp, src_handle_str):
+    <span class="str">"""
+    Find and erase a previously generated solid that stores
+    src_handle_str in its XData (app: ROAD_MARK_SRC).
+    """</span>
+    <span class="kw">for</span> entity_id <span class="kw">in</span> msp:
+        ent = tr.GetObject(entity_id, OpenMode.ForRead)
+        xdata = ent.GetXDataForApplication(XDATA_APP)
+        <span class="kw">if</span> xdata <span class="kw">is</span> <span class="kw">None</span>:
+            <span class="kw">continue</span>
+        <span class="kw">for</span> tv <span class="kw">in</span> xdata:
+            <span class="kw">if</span> tv.TypeCode == <span class="num">1000</span> <span class="kw">and</span> tv.Value == src_handle_str:
+                ent.UpgradeOpen()
+                ent.Erase()
+                <span class="kw">break</span>
+
+
+<span class="cm"># ── MAIN ──────────────────────────────────────────────────────</span>
+
+<span class="kw">def</span> <span class="fn">run</span>():
+    doc = Application.DocumentManager.MdiActiveDocument
+    db  = doc.Database
+    ed  = doc.Editor
+
+    <span class="kw">if</span> mark_type <span class="kw">not in</span> STANDARDS:
+        <span class="kw">return</span> <span class="str">f"ERROR: Unknown marking type '{mark_type}'"</span>
+
+    dash, gap, default_w, thickness = STANDARDS[mark_type]
+    width = <span class="kw">float</span>(width_override) <span class="kw">if</span> width_override <span class="kw">else</span> default_w
+
+    <span class="kw">with</span> doc.LockDocument():
+        <span class="kw">with</span> db.TransactionManager.StartTransaction() <span class="kw">as</span> tr:
+            bt  = tr.GetObject(db.BlockTableId, OpenMode.ForRead)
+            msp = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite)
+
+            <span class="cm"># Unwrap Dynamo element to get ObjectId</span>
+            <span class="kw">try</span>:
+                obj_id = source_obj.InternalObjectId
+            <span class="kw">except</span>:
+                <span class="kw">return</span> <span class="str">"ERROR: Could not unwrap source object."</span>
+
+            src_handle = tr.GetObject(obj_id, OpenMode.ForRead).Handle.ToString()
+
+            <span class="cm"># Remove previous solid generated from this source line</span>
+            delete_old_solid(db, tr, msp, src_handle)
+
+            <span class="cm"># Ensure layer exists</span>
+            lt = tr.GetObject(db.LayerTableId, OpenMode.ForWrite)
+            <span class="kw">if</span> <span class="kw">not</span> lt.Has(MARK_LAYER):
+                <span class="kw">from</span> Autodesk.AutoCAD.DatabaseServices <span class="kw">import</span> LayerTableRecord
+                ltr = LayerTableRecord()
+                ltr.Name = MARK_LAYER
+                lt.Add(ltr)
+                tr.AddNewlyCreatedDBObject(ltr, <span class="kw">True</span>)
+
+            <span class="cm"># Ensure XData app is registered</span>
+            rat = tr.GetObject(db.RegAppTableId, OpenMode.ForWrite)
+            <span class="kw">if</span> <span class="kw">not</span> rat.Has(XDATA_APP):
+                <span class="kw">from</span> Autodesk.AutoCAD.DatabaseServices <span class="kw">import</span> RegAppTableRecord
+                ra = RegAppTableRecord()
+                ra.Name = XDATA_APP
+                rat.Add(ra)
+                tr.AddNewlyCreatedDBObject(ra, <span class="kw">True</span>)
+
+            <span class="cm"># Get points along the source line</span>
+            pts = get_polyline_points(tr, obj_id)
+            <span class="kw">if</span> len(pts) < <span class="num">2</span>:
+                <span class="kw">return</span> <span class="str">"ERROR: Source line has fewer than 2 vertices."</span>
+
+            segs, total_len = segment_lengths(pts)
+            intervals = build_dash_intervals(total_len, dash, gap)
+
+            <span class="kw">if</span> <span class="kw">not</span> intervals:
+                <span class="kw">return</span> <span class="str">"ERROR: No dash intervals generated — line too short?"</span>
+
+            solid_ids = []
+            <span class="kw">for</span> (s, e) <span class="kw">in</span> intervals:
+                pa = point_at_distance(segs, s)
+                pb = point_at_distance(segs, e)
+                sid = create_box_solid(db, tr, msp, pa, pb, width, thickness)
+                <span class="kw">if</span> sid:
+                    solid_ids.append(sid)
+
+            <span class="kw">if</span> <span class="kw">not</span> solid_ids:
+                <span class="kw">return</span> <span class="str">"ERROR: No solids created."</span>
+
+            <span class="cm"># Boolean-union all solids into the first one</span>
+            base = tr.GetObject(solid_ids[<span class="num">0</span>], OpenMode.ForWrite)
+            <span class="kw">for</span> i <span class="kw">in</span> range(<span class="num">1</span>, len(solid_ids)):
+                tool = tr.GetObject(solid_ids[i], OpenMode.ForWrite)
+                base.BooleanOperation(
+                    Autodesk.AutoCAD.DatabaseServices.BooleanOperationType.BoolUnite,
+                    tool
+                )
+                tool.Erase()
+
+            <span class="cm"># Stamp XData on the unified solid so we can find it on re-run</span>
+            rb = ResultBuffer(
+                TypedValue(<span class="num">1001</span>, XDATA_APP),       <span class="cm"># app name</span>
+                TypedValue(<span class="num">1000</span>, src_handle),       <span class="cm"># source handle string</span>
+                TypedValue(<span class="num">1000</span>, mark_type),        <span class="cm"># type for reference</span>
+            )
+            base.XData = rb
+
+            tr.Commit()
+
+    <span class="kw">return</span> (
+        <span class="str">f"OK: {mark_type} marking created. "</span>
+        <span class="str">f"{len(intervals)} dashes unified into 1 solid. "</span>
+        <span class="str">f"Total length: {total_len:.2f} m, Width: {width:.3f} m."</span>
+    )
+
+OUT = run()</pre>
+    </div>
+  </div>
+
+  <!-- Key techniques -->
+  <div class="section">
+    <div class="section-label">Deep Dive</div>
+    <h2>Key techniques explained</h2>
+
+    <h3>Boolean Union — the "single solid" trick</h3>
+    <p>Each dash is created as an independent <code style="color:var(--accent2); font-family:'JetBrains Mono',monospace">Solid3d</code>. After all dashes exist in the database, a loop calls <code style="color:var(--accent2); font-family:'JetBrains Mono',monospace">BooleanOperation(BoolUnite, tool)</code> on the first solid against each subsequent one, then erases the consumed tool. The result is a single <code style="color:var(--accent2); font-family:'JetBrains Mono',monospace">Solid3d</code> with internal history stored as BREP shells.</p>
+
+    <h3>Dynamic link via XData</h3>
+    <p>XData is AutoCAD's per-object key-value store. The script writes the source line's Handle (a permanent string ID, unlike ObjectIds which can change) into the solid's XData under a registered application name. On re-run, <code style="color:var(--accent2); font-family:'JetBrains Mono',monospace">delete_old_solid()</code> scans model space, finds the solid whose XData matches the current source handle, erases it, then regenerates fresh — giving the illusion of a live parametric link.</p>
+
+    <h3>Coordinate transform for orientation</h3>
+    <p><code style="color:var(--accent2); font-family:'JetBrains Mono',monospace">CreateBox()</code> always produces a world-axis-aligned box. <code style="color:var(--accent2); font-family:'JetBrains Mono',monospace">Matrix3d.AlignCoordinateSystem()</code> rotates and translates it so its local X-axis aligns with the dash direction vector, placing it correctly in 3D space even on curved or graded alignments.</p>
+
+    <div class="alert">
+      <strong>For curved alignments:</strong> Increase the sampling resolution in <code style="color:var(--accent); font-family:'JetBrains Mono',monospace">get_polyline_points()</code> by subdividing each segment. Feature lines from a corridor already carry dense vertex arrays — this is why they're preferred over simple polylines for curved roads.
+    </div>
+
+    <h3>Improving for real production use</h3>
+    <div class="card-grid">
+      <div class="card teal">
+        <div class="card-title">Curved segments</div>
+        <div class="card-text">Sample each polyline segment at every 0.5 m rather than just at vertices. This approximates curves and avoids flat-chord artifacts on tight radii.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Layer + color by type</div>
+        <div class="card-text">Assign different layers and True Colors per marking type to support automated plan production and quantity takeoffs in Civil 3D.</div>
+      </div>
+      <div class="card red">
+        <div class="card-title">Double lines (M3)</div>
+        <div class="card-text">Run the script twice with ±offset to the source line, or add an offset parameter that creates two parallel solids and unions them together.</div>
+      </div>
+      <div class="card teal">
+        <div class="card-title">Dynamo Player params</div>
+        <div class="card-text">Expose mark_type and width via Dynamo Player's input panel so users never open the full editor — just click Run in the Player window.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Horizontal alignment -->
+  <div class="section" id="horizontal-alignment">
+    <div class="section-label">Geometry</div>
+    <h2>Alignment and horizontal geometry</h2>
+    <p>The <strong>alignment</strong> is the master horizontal control: tangents, circular curves, and spirals (clothoids) where your design standard requires transition length. Stations, station equations, and design speed feed everything downstream (profile, superelevation, corridors, labels).</p>
+
+    <div class="card-grid">
+      <div class="card gold">
+        <div class="card-num">H1</div>
+        <div class="card-title">Civil 3D objects</div>
+        <div class="card-text">Alignment entities, design criteria sets (AASHTO-style or custom), fixed/floating/free curves and spirals, superelevation critical stations.</div>
+      </div>
+      <div class="card teal">
+        <div class="card-num">H2</div>
+        <div class="card-title">Automation levers</div>
+        <div class="card-text">Import PI/curve tables from CSV or LandXML; Dynamo to place alignments from polylines; .NET for batch criteria application and QA checks on radius and spiral lengths.</div>
+      </div>
+      <div class="card">
+        <div class="card-num">H3</div>
+        <div class="card-title">Outputs</div>
+        <div class="card-text">Labeled plans, legal stationing, offset baselines for lanes and services, geometry reports for checks against standard templates.</div>
+      </div>
+      <div class="card red">
+        <div class="card-num">H4</div>
+        <div class="card-title">BOQ link</div>
+        <div class="card-text">Indirect: chainage and horizontal extents drive length-based pay items (pavement, barriers) once tied to corridor or marking runs.</div>
+      </div>
+    </div>
+
+    <h3>Typical workflow</h3>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Define PIs and design criteria</div>
+          <div class="step-desc">Create the alignment from COGO points, polyline fit, or imported geometry; attach a criteria set for min radius, transition types, and design speed.</div>
+        </div>
+      </div>
+      <div class="flow-connector"><div class="flow-line"></div><div></div></div>
+      <div class="flow-step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Tune curves and spirals</div>
+          <div class="step-desc">Resolve curve groups; add spirals where required; use station equations at structure or jurisdiction boundaries.</div>
+        </div>
+      </div>
+      <div class="flow-connector"><div class="flow-line"></div><div></div></div>
+      <div class="flow-step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Publish for downstream models</div>
+          <div class="step-desc">Data shortcuts or xref templates; sample feature lines at offsets for markings, kerbs, and drainage laterals.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vertical profile -->
+  <div class="section" id="vertical-profile">
+    <div class="section-label">Geometry</div>
+    <h2>Vertical profile and vertical curves</h2>
+    <p>The <strong>profile</strong> ties elevation to station along the alignment using tangents and <strong>parabolic vertical curves</strong> at PVIs. Grades control drainage, sight distance, and earthwork balance; profiles can represent existing ground (EG) or finished grade (FG) for corridors.</p>
+
+    <div class="card-grid">
+      <div class="card gold">
+        <div class="card-num">V1</div>
+        <div class="card-title">Civil 3D objects</div>
+        <div class="card-text">Surface profiles, layout profiles, profile views, PVI-based layout, vertical curve K-values or length, band sets for slope and elevation.</div>
+      </div>
+      <div class="card teal">
+        <div class="card-num">V2</div>
+        <div class="card-title">Automation levers</div>
+        <div class="card-text">Profile from file or Excel grades; Dynamo to place PVIs at regular chainage; minimum grade rules scripted for stormwater checks.</div>
+      </div>
+      <div class="card">
+        <div class="card-num">V3</div>
+        <div class="card-title">Outputs</div>
+        <div class="card-text">Profile sheets, clash checks against utilities, FG profiles consumed by corridor assemblies for pavement structure.</div>
+      </div>
+      <div class="card red">
+        <div class="card-num">V4</div>
+        <div class="card-title">BOQ link</div>
+        <div class="card-text">Indirect: vertical design sets finished levels that drive corridor volumes and material thickness when tied to structure depth.</div>
+      </div>
+    </div>
+
+    <h3>Typical workflow</h3>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Attach EG surface</div>
+          <div class="step-desc">Create a surface profile on the alignment; use it as context for cut and fill in the profile view.</div>
+        </div>
+      </div>
+      <div class="flow-connector"><div class="flow-line"></div><div></div></div>
+      <div class="flow-step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Layout FG PVIs and vertical curves</div>
+          <div class="step-desc">Meet max/min grades and K-value standards; coordinate superelevation crossfall with edge-of-travel-way elevations where required.</div>
+        </div>
+      </div>
+      <div class="flow-connector"><div class="flow-line"></div><div></div></div>
+      <div class="flow-step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Bind to corridor</div>
+          <div class="step-desc">Use the finished profile as a corridor baseline for pavement and structure; regenerate when horizontal or vertical edits land.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cross-sections -->
+  <div class="section" id="cross-sections">
+    <div class="section-label">Typical section</div>
+    <h2>Cross-sections: carriageway, shoulders, kerbs, drains</h2>
+    <p><strong>Assemblies</strong> stack <strong>subassemblies</strong> (lane, shoulder, kerb and gutter, sidewalk, trench, daylight) to describe the half-section or full section. Frequencies, targets (width, elevation, offset), and conditional logic determine how the section reacts along the alignment and around curves.</p>
+
+    <div class="card-grid">
+      <div class="card gold">
+        <div class="card-num">X1</div>
+        <div class="card-title">Civil 3D objects</div>
+        <div class="card-text">Assembly groups, LinkWidthAndSlope, UrbanCurbGutter, LaneSuperelevationAOR, GenericPavementStructure, daylight to surface, pipe trench sections.</div>
+      </div>
+      <div class="card teal">
+        <div class="card-num">X2</div>
+        <div class="card-title">Automation levers</div>
+        <div class="card-text">Tool palettes and PKT subassemblies; XML or Dynamo-driven width tables; width and offset targets from polylines or feature lines.</div>
+      </div>
+      <div class="card">
+        <div class="card-num">X3</div>
+        <div class="card-title">Outputs</div>
+        <div class="card-text">Section editor previews, corridor solids by material, feature lines for edge-of-pavement and back-of kerb for markings and drainage.</div>
+      </div>
+      <div class="card red">
+        <div class="card-num">X4</div>
+        <div class="card-title">BOQ link</div>
+        <div class="card-text">Strong: pavement areas, structure layers, and linear strip quantities roll up from corridor shapes when coded consistently.</div>
+      </div>
+    </div>
+
+    <h3>Typical workflow</h3>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Model design section</div>
+          <div class="step-desc">Build assembly with carriageway lanes, shoulders, kerb units, and optional drain or trench links tied to daylight or cover constraints.</div>
+        </div>
+      </div>
+      <div class="flow-connector"><div class="flow-line"></div><div></div></div>
+      <div class="flow-step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Assign targets and frequencies</div>
+          <div class="step-desc">Map offset alignments, feature lines, or surfaces so widths and slopes update parametrically along chainage.</div>
+        </div>
+      </div>
+      <div class="flow-connector"><div class="flow-line"></div><div></div></div>
+      <div class="flow-step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Validate in section view</div>
+          <div class="step-desc">Sweep critical stations (superelevation, utilities, bridges) before corridor rebuild at full frequency.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Corridor and earthworks -->
+  <div class="section" id="corridor-earthworks">
+    <div class="section-label">3D model</div>
+    <h2>Corridor modelling and earthworks</h2>
+    <p>A <strong>corridor</strong> merges alignment, profile, and assembly into a dynamic 3D road model. <strong>Volume surfaces</strong> and composite volumes quantify cut, fill, and material between datum and design surfaces for mass haul and payment reconciliation.</p>
+
+    <div class="card-grid">
+      <div class="card gold">
+        <div class="card-num">C1</div>
+        <div class="card-title">Civil 3D objects</div>
+        <div class="card-text">Corridor, baselines, regions, surfaces (corridor, EG, composite), material lists, volume tables, grading groups where applicable.</div>
+      </div>
+      <div class="card teal">
+        <div class="card-num">C2</div>
+        <div class="card-title">Automation levers</div>
+        <div class="card-text">Batch rebuild via Dynamo or .NET; corridor frequency presets; export volumes to CSV; split regions by station ranges for phased construction.</div>
+      </div>
+      <div class="card">
+        <div class="card-num">C3</div>
+        <div class="card-title">Outputs</div>
+        <div class="card-text">Cut-fill maps, earthwork schedules, corridor solids for visualization, feature lines consumed by markings and QTO.</div>
+      </div>
+      <div class="card red">
+        <div class="card-num">C4</div>
+        <div class="card-title">BOQ link</div>
+        <div class="card-text">Strong: earthwork volumes and material volumes map directly to pay items when surfaces and codes align with contract breakdown.</div>
+      </div>
+    </div>
+
+    <h3>Typical workflow</h3>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Create corridor from baseline</div>
+          <div class="step-desc">Pick alignment, profile, and assembly; set start and end stations; add regions for typical and atypical sections.</div>
+        </div>
+      </div>
+      <div class="flow-connector"><div class="flow-line"></div><div></div></div>
+      <div class="flow-step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Build comparison surfaces</div>
+          <div class="step-desc">Extract corridor surface; define composite with EG; compute net volumes and material boundaries.</div>
+        </div>
+      </div>
+      <div class="flow-connector"><div class="flow-line"></div><div></div></div>
+      <div class="flow-step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Publish quantities</div>
+          <div class="step-desc">Export material lists and volume reports for BOQ and DPR appendices; refresh after design revisions.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Signage and furniture -->
+  <div class="section" id="signage-furniture">
+    <div class="section-label">Assets</div>
+    <h2>Signage and road furniture</h2>
+    <p>Road furniture is usually <strong>block references</strong> placed at station, offset, and rotation relative to the alignment or lane edge. Automate from a schedule (sign type, chainage, side, offset) to reduce manual pick-and-place errors and keep legend tables in sync.</p>
+
+    <div class="card-grid">
+      <div class="card gold">
+        <div class="card-num">S1</div>
+        <div class="card-title">Civil 3D objects</div>
+        <div class="card-text">Blocks in model space, alignment/offset labels, possibly COGO points for posts; xref libraries for standard sign drawings.</div>
+      </div>
+      <div class="card teal">
+        <div class="card-num">S2</div>
+        <div class="card-title">Automation levers</div>
+        <div class="card-text">Dynamo or Python: read CSV (station, offset, type); insert block at computed Point3d and rotation from alignment tangent; tool palettes for manual overrides.</div>
+      </div>
+      <div class="card">
+        <div class="card-num">S3</div>
+        <div class="card-title">Outputs</div>
+        <div class="card-text">Plan sheets with sign tables, 3D visualization for clash checks against clear zones and utilities.</div>
+      </div>
+      <div class="card red">
+        <div class="card-num">S4</div>
+        <div class="card-title">BOQ link</div>
+        <div class="card-text">Strong when each block type maps to a pay item count; export schedule to Excel for BOQ lines (each, nr, or length-based posts).</div>
+      </div>
+    </div>
+
+    <h3>Typical workflow</h3>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Maintain a sign catalog</div>
+          <div class="step-desc">Standardize block names and attributes (sign code, reflectivity, foundation type) matching contract nomenclature.</div>
+        </div>
+      </div>
+      <div class="flow-connector"><div class="flow-line"></div><div></div></div>
+      <div class="flow-step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Place from schedule</div>
+          <div class="step-desc">Run automation to stamp blocks along alignment; QA against minimum spacing and visibility rules in the design standard.</div>
+        </div>
+      </div>
+      <div class="flow-connector"><div class="flow-line"></div><div></div></div>
+      <div class="flow-step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Extract for sheets and BOQ</div>
+          <div class="step-desc">Data extraction or Dynamo export of block counts and attributes into CSV for BOQ and DPR appendices.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sheets and DPR -->
+  <div class="section" id="sheets-dpr">
+    <div class="section-label">Deliverables</div>
+    <h2>DPR and drawing sheet production</h2>
+    <p><strong>Drawing production</strong> uses Plan Production tools, view frames along alignments, layouts, and Sheet Set Manager to publish consistent plan-profile sheets. A <strong>DPR</strong> (Detailed Project Report) or similar project narrative is usually assembled outside the DWG: exported quantities, key plan PDFs, and narrative sections merged in Word or PDF from templates — automation focuses on <strong>reliable exports</strong> and repeatable sheet sets rather than storing prose inside Civil 3D.</p>
+
+    <div class="card-grid">
+      <div class="card gold">
+        <div class="card-num">D1</div>
+        <div class="card-title">Civil 3D objects</div>
+        <div class="card-text">View frames, match lines, layouts, title blocks, sheet sets, publish targets (PDF, DWF, DWG).</div>
+      </div>
+      <div class="card teal">
+        <div class="card-num">D2</div>
+        <div class="card-title">Automation levers</div>
+        <div class="card-text">Sheet Set Manager fields; batch publish scripts; Dynamo or .NET to rename layouts from station ranges; data shortcuts for multi-discipline sets.</div>
+      </div>
+      <div class="card">
+        <div class="card-num">D3</div>
+        <div class="card-title">Outputs</div>
+        <div class="card-text">Issued-for-construction drawing packages, transmittals, and linked appendices (volumes, BOQ, environmental tables).</div>
+      </div>
+      <div class="card red">
+        <div class="card-num">D4</div>
+        <div class="card-title">BOQ link</div>
+        <div class="card-text">Partial: sheets carry summary tables; full BOQ still lives in spreadsheet or cost tool fed by exported QTO.</div>
+      </div>
+    </div>
+
+    <h3>Typical workflow</h3>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Create view frames along alignment</div>
+          <div class="step-desc">Set match line overlap, scale, and template DWG with configured viewports for plan and profile.</div>
+        </div>
+      </div>
+      <div class="flow-connector"><div class="flow-line"></div><div></div></div>
+      <div class="flow-step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Populate sheet set metadata</div>
+          <div class="step-desc">Project number, revision, date, and client fields propagate to title blocks for audit trail.</div>
+        </div>
+      </div>
+      <div class="flow-connector"><div class="flow-line"></div><div></div></div>
+      <div class="flow-step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Publish and bind into DPR</div>
+          <div class="step-desc">Export PDF set; merge with narrative and quantity appendices in your document template (mail-merge, scripting, or manual compile).</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quantities and BOQ -->
+  <div class="section" id="quantities-boq">
+    <div class="section-label">Commercial</div>
+    <h2>Quantity takeoff and BOQ generation</h2>
+    <p><strong>Quantity takeoff (QTO)</strong> aggregates lengths, areas, and counts from alignments, corridors, surfaces, and AutoCAD solids. Map Civil 3D codes and layers to <strong>pay items</strong>, then export to CSV or Excel for the <strong>Bill of Quantities (BOQ)</strong> used in tendering and progress claims.</p>
+
+    <div class="card-grid">
+      <div class="card gold">
+        <div class="card-num">Q1</div>
+        <div class="card-title">Civil 3D objects</div>
+        <div class="card-text">QTO Manager, corridor quantity takeoff, material lists, pipe runs, AutoCAD solids by layer for custom items (markings).</div>
+      </div>
+      <div class="card teal">
+        <div class="card-num">Q2</div>
+        <div class="card-title">Automation levers</div>
+        <div class="card-text">Pay item formula tables; export to CSV; Dynamo to sum solid volumes or lengths by type from XData; Power Query in Excel to shape BOQ columns.</div>
+      </div>
+      <div class="card">
+        <div class="card-num">Q3</div>
+        <div class="card-title">Outputs</div>
+        <div class="card-text">BOQ workbooks with sections for earthworks, pavement, drainage, markings, signs; revision logs keyed to drawing revision.</div>
+      </div>
+      <div class="card red">
+        <div class="card-num">Q4</div>
+        <div class="card-title">BOQ link</div>
+        <div class="card-text">Direct: this stage is the BOQ source of truth when pay mapping and units are validated against the contract schedule.</div>
+      </div>
+    </div>
+
+    <h3>Typical workflow</h3>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Define pay item mapping</div>
+          <div class="step-desc">Link corridor codes, pipe sizes, and solid layers to contract item numbers and measurement units (m, m², m³, each).</div>
+        </div>
+      </div>
+      <div class="flow-connector"><div class="flow-line"></div><div></div></div>
+      <div class="flow-step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Run QTO and corridor reports</div>
+          <div class="step-desc">Refresh after corridor rebuild; isolate by region or phase for staged tenders.</div>
+        </div>
+      </div>
+      <div class="flow-connector"><div class="flow-line"></div><div></div></div>
+      <div class="flow-step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Export and format BOQ</div>
+          <div class="step-desc">Push totals into Excel BOQ template; archive CSV with drawing issue for audit.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Automation summary table -->
+  <div class="section" id="automation-summary">
+    <div class="section-label">Reference</div>
+    <h2>Automation summary by discipline</h2>
+    <p>Quick map of each road-design area to native objects, typical automation tooling, and how directly it feeds a BOQ.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Area</th><th>Primary Civil 3D objects</th><th>Typical automation</th><th>BOQ link</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="td-name">Horizontal alignment</td><td>Alignment, criteria, spirals, stationing</td><td>Import tables, Dynamo polyline-to-alignment, .NET QA</td><td class="td-note">Indirect (lengths via corridor / markings)</td></tr>
+          <tr><td class="td-name">Vertical profile</td><td>Layout profile, PVI, vertical curves, bands</td><td>Excel grades, Dynamo PVI placement, design checks</td><td class="td-note">Indirect (volumes via FG)</td></tr>
+          <tr><td class="td-name">Cross-sections</td><td>Assembly, subassemblies, targets, frequency</td><td>Tool palettes, PKT, XML widths, Dynamo targets</td><td class="td-note">Strong (pavement / layer areas)</td></tr>
+          <tr><td class="td-name">Corridor &amp; earthworks</td><td>Corridor, surfaces, composite volumes, materials</td><td>Batch rebuild, export volumes, phased regions</td><td class="td-note">Strong (cut/fill, materials)</td></tr>
+          <tr><td class="td-name">Signage &amp; furniture</td><td>Blocks, alignments, attributes</td><td>CSV-driven placement, schedules, data extraction</td><td class="td-note">Strong (counts by type)</td></tr>
+          <tr><td class="td-name">Sheets &amp; DPR</td><td>View frames, layouts, sheet sets, PDF</td><td>Batch publish, SSM fields, document merge</td><td class="td-note">Partial (summary tables on sheets)</td></tr>
+          <tr><td class="td-name">Quantities &amp; BOQ</td><td>QTO, corridor QTO, tables, solids</td><td>Pay mapping, CSV, Excel, Dynamo rollups</td><td class="td-note">Direct (BOQ source)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Required setup -->
+  <div class="section" id="setup">
+    <div class="section-label">Setup</div>
+    <h2>Prerequisites & setup</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Item</th><th>Requirement</th><th>Note</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="td-name">Civil 3D</td><td>2022 or later</td><td class="td-note">Earlier versions may have Dynamo 1.x with different APIs</td></tr>
+          <tr><td class="td-name">Dynamo</td><td>2.x (bundled)</td><td class="td-note">Use the Civil 3D-bundled version, not Dynamo Sandbox</td></tr>
+          <tr><td class="td-name">Python Runtime</td><td>IronPython 2.7</td><td class="td-note">Set in Python Script node settings panel</td></tr>
+          <tr><td class="td-name">Source object</td><td>3D Polyline or Feature Line</td><td class="td-note">Must have Z values set on all vertices</td></tr>
+          <tr><td class="td-name">clr references</td><td>AcMgd, AcDbMgd, AeccDbMgd</td><td class="td-note">All bundled with Civil 3D installation</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert teal">
+      <strong>CPython note:</strong> If your Dynamo version uses CPython 3 instead of IronPython 2.7, replace <code>clr.AddReference</code> calls with <code>import pythonnet</code> setup, and use the <code>ezdxf</code> library as an alternative path. The logic above remains identical.
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  Road design automation hub — Civil 3D • Marking module: Dynamo &amp; Python, SN 640850A reference
+</div>
+
+<script>
+  // Render road marking visualizations
+  function renderVis(id, dashPx, gapPx, color, height) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const total = el.offsetWidth - 32;
+    let x = 0;
+    el.innerHTML = '';
+    while (x < total) {
+      const seg = document.createElement('div');
+      seg.className = 'mark-seg';
+      seg.style.width = Math.min(dashPx, total - x) + 'px';
+      seg.style.background = color;
+      seg.style.height = height + 'px';
+      el.appendChild(seg);
+      x += dashPx;
+      if (gapPx <= 0) break;
+      const gap = document.createElement('div');
+      gap.className = 'mark-gap';
+      gap.style.width = Math.min(gapPx, total - x) + 'px';
+      el.appendChild(gap);
+      x += gapPx;
+    }
+  }
+
+  window.addEventListener('load', () => {
+    // M1: 3m dash / 9m gap → 30px / 90px scaled
+    renderVis('vis-m1', 30, 90, '#f0f0f0', 8);
+    // M2: solid
+    renderVis('vis-m2', 9999, 0, '#f0f0f0', 10);
+    // M4: 1m dash / 1m gap → 24px / 24px
+    renderVis('vis-m4', 24, 24, '#f0c030', 14);
+  });
+
+  function copyCode(btn, id) {
+    const pre = document.getElementById(id);
+    const text = pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+</script>
+</body>
+</html>

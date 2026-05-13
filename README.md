@@ -36,7 +36,7 @@ For a single **readable** walkthrough (install, testing, markings, advanced topi
 
 ## Civil 3D automation package
 
-The **`civil3d_automation/`** folder is the runnable **M1–M8** package: **IronPython** scripts for Dynamo for Civil 3D, sample **CSV** inputs, **`project.json`** for M8, and Markdown notes beside the code. **No HTML file is required at runtime**—Dynamo and the Python helpers use JSON, CSV, and your DWG only.
+The **`civil3d_automation/`** folder is the runnable **M1–M8** package: **IronPython** scripts for Dynamo for Civil 3D, sample **CSV** inputs, **`project.json`** for M8, and Markdown notes beside the code. **No HTML file is required at runtime**—Dynamo and the Python helpers use JSON, CSV, and your DWG only. **There is no `README.md` inside this folder**—all package documentation is in this root file (section below).
 
 **Optional HTML:** [Handbook sections](road_automation_complete.html) — [# Overview](road_automation_complete.html#sec-ultimate), [# User guide / install](road_automation_complete.html#sec-user-guide), [# Beginner primer](road_automation_complete.html#sec-beginners), [# Testing](road_automation_complete.html#sec-testing), [# Markings](road_automation_complete.html#sec-marking), [# Advanced](road_automation_complete.html#sec-advanced).
 

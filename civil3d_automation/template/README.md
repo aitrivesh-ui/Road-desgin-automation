@@ -13,4 +13,4 @@ Civil 3D cannot seed a binary `.dwg` from this repository in a portable way. Cre
 
 Save as `template/RoadAutomation_Template.dwt` (or `.dwg`) and copy for each test project.
 
-For **Python 3 helpers** (preflight, tests, optional Excel export) outside Civil 3D, run **`install_tools.bat`** in the parent `civil3d_automation` folder once — see the package [README.md](../README.md).
+For **Python 3 helpers** (preflight, tests, optional Excel export) outside Civil 3D, run **`install_tools.bat`** in the parent `civil3d_automation` folder once — see the repository **[README.md](../../README.md)** (sections **Quick start** and **Tools outside Civil 3D**).

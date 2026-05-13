@@ -65,7 +65,7 @@ if not exist "%~dp0config\project.json" (
 echo.
 echo === Setup finished ===
 echo Optional tools ^(openpyxl, etc.^) are installed for this Python.
-echo Civil 3D / Dynamo / IronPython are separate; see the repo README.
+echo Civil 3D / Dynamo / IronPython are separate; see README.md in the parent folder ^(repo root^).
 echo.
 echo Next steps:
 echo   - Edit CSVs under csv\ and paths in config\project.json

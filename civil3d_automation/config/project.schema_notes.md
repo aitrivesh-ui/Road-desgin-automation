@@ -1,6 +1,6 @@
 # `project.json` field reference
 
-Copy `project.example.json` to `config/project.json` and edit. JSON does not allow comments; use this table when unsure.
+Copy `project.example.json` to `config/project.json` and edit (on Windows you can run **`install_tools.bat`** once: it creates `project.json` from the example only if the file is missing). JSON does not allow comments; use this table when unsure.
 
 ## `project`
 

@@ -2,12 +2,14 @@
 
 Dynamo `.dyn` files are JSON graphs tied to a specific Dynamo build; they are fragile in git across versions. **Recommended workflow:** build each graph once in Civil 3D, then save next to these scripts.
 
+**Windows — optional Python helpers:** from `civil3d_automation/`, run **`install_tools.bat`** (or `install.bat` at the repo root) so preflight, tests, and Excel export scripts have their dependencies; see `../tools/README.md`.
+
 ## Build each module (M1–M8)
 
 1. Open **Dynamo** from Civil 3D (Manage tab).
 2. **New** graph.
 3. Add a **Python Script** node.
-4. Set engine to **IronPython 2** (match [road_marking_dynamo.html](../../road_marking_dynamo.html)).
+4. Set engine to **IronPython 2** (match [Markings hub in the handbook](../../road_automation_complete.html#sec-marking)).
 5. Open the matching file under `../python/`, copy **entire** contents into the Python Script node.
 6. Add **String** / **Number** input nodes and wire to the Python node **in order** matching the `IN[0]…` docstring at the top of each script.
 7. Add a **Watch** node on `OUT`.
@@ -33,7 +35,7 @@ Dynamo `.dyn` files are JSON graphs tied to a specific Dynamo build; they are fr
 
 ## Marking module (existing)
 
-The road marking generator remains in [road_marking_dynamo.html](../../road_marking_dynamo.html). Paste that script into its own graph between **M4** and **M5** in your production order.
+The road marking generator remains in [road_automation_complete.html — Markings hub](../../road_automation_complete.html#sec-marking). Paste that script into its own graph between **M4** and **M5** in your production order.
 
 ---
 

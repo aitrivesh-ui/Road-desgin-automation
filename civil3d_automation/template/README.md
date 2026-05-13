@@ -12,3 +12,5 @@ Civil 3D cannot seed a binary `.dwg` from this repository in a portable way. Cre
 6. **Surfaces for M4/M7 (optional):** EG and FG TIN surfaces named in `project.json` (`names.surface_eg`, `names.surface_fg`).
 
 Save as `template/RoadAutomation_Template.dwt` (or `.dwg`) and copy for each test project.
+
+For **Python 3 helpers** (preflight, tests, optional Excel export) outside Civil 3D, run **`install_tools.bat`** in the parent `civil3d_automation` folder once — see the package [README.md](../README.md).

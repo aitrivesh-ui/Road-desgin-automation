@@ -3,6 +3,8 @@
 **Target host:** Autodesk Civil 3D 2022–2025 with Dynamo 2.x  
 **Python:** IronPython 2.7 in Python Script nodes (default for many Civil installs). For CPython 3 Dynamo, references and some types differ—branch in code after confirming Manage → Dynamo → Python engine.
 
+**Python 3 (preflight, clone, tests, optional Excel):** separate install on the workstation. On Windows, run **`install_tools.bat`** in `civil3d_automation/` or **`install.bat`** at the repo root once to install `requirements-tools.txt`.
+
 ## Assemblies (IronPython)
 
 ```python
@@ -17,7 +19,7 @@ clr.AddReference('AeccDbMgd')
 
 ## Document lock and transactions
 
-Match the pattern used in [road_marking_dynamo.html](../road_marking_dynamo.html):
+Match the pattern used in [road_automation_complete.html — Markings hub](../road_automation_complete.html#sec-marking):
 
 - `Application.DocumentManager.MdiActiveDocument`
 - `with doc.LockDocument():`
@@ -61,7 +63,7 @@ Reference: [Alignment.Create](https://civapidocs.com/2024/858c3c00-a967-985f-8c9
 
 ## BOQ (M7)
 
-- Marking solids: XData app `ROAD_MARK_SRC` and type string per [road_marking_dynamo.html](../road_marking_dynamo.html).
+- Marking solids: XData app `ROAD_MARK_SRC` and type string per [road_automation_complete.html — Markings hub](../road_automation_complete.html#sec-marking).
 - Corridor quantities: use Corridor QTO / material APIs for your version; replace placeholder loops with validated calls.
 - **Excel:** IronPython often has no `openpyxl`—default output is **CSV**; open in Excel or use Power Query.
 

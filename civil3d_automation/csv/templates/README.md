@@ -18,10 +18,9 @@ See also: `config/project.example.json`, `config/project.schema_notes.md`, and t
 
 File: **`RoadAutomation_DataStarter.xlsx`** (same folder as this README).
 
-- **Regenerate** after you change template column names: from repo root, install optional deps then run:
+- **Regenerate** after you change template column names: from repo root, install optional deps (double-click **`install.bat`**, or run `pip install -r civil3d_automation/requirements-tools.txt`), then run:
 
   ```bat
-  pip install -r civil3d_automation/requirements-tools.txt
   python civil3d_automation/tools/build_starter_workbook.py
   ```
 

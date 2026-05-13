@@ -1,6 +1,14 @@
 # Preflight helper (Windows + Python 3)
 
+## Install Python tool dependencies (first time)
+
+From the **`civil3d_automation`** folder (parent of this `tools` folder), double-click **`install_tools.bat`**, or from the repository root double-click **`install.bat`**. That runs `pip install -r requirements-tools.txt` and creates **`config/project.json`** from **`project.example.json`** only if `project.json` is missing. Civil 3D and Dynamo are installed separately.
+
+---
+
 Double-click **`run_preflight.bat`** (or run `python road_automation_preflight.py` from this folder).
+
+**Documentation:** the optional HTML handbook is [`road_automation_complete.html`](../../road_automation_complete.html) at the repository root (for humans only; preflight and Dynamo do not use it).
 
 ## What it does
 

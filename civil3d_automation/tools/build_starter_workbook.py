@@ -83,15 +83,114 @@ SHEET_COLS: dict[str, list[tuple[str, str, object]]] = {
         ("description",      "Full pay-item description as per the contract BoQ.",                     "Roadway excavation"),
         ("unit",             "Unit of measure: m3, m2, m, No., t, etc.",                              "m3"),
     ],
+    # M9 — Road markings
+    "road_markings": [
+        ("mark_id",          "Unique marking identifier.",                                             "RM-001"),
+        ("station_start_m",  "Start chainage for the marking line (m).",                              0.0),
+        ("station_end_m",    "End chainage for the marking line (m).",                                100.0),
+        ("offset_m",         "Lateral offset from centreline (m). Use 0 for centre line.",            0.0),
+        ("side",             "L / R / C (left / right / centre of CL).",                              "C"),
+        ("mark_type",        "CENTRE_SOLID, CENTRE_DASH, EDGE_SOLID, EDGE_DASH, STOP_LINE, etc.",     "CENTRE_SOLID"),
+        ("width_m",          "Line width (m). Typical values: 0.10, 0.15, 0.20.",                    0.15),
+        ("dash_length_m",    "Dash length (m) for dashed lines. Leave 0 for solid.",                  3.0),
+        ("gap_length_m",     "Gap length (m) for dashed lines. Leave 0 for solid.",                   9.0),
+    ],
+    # M10 — Cross-section stations (optional; M10 auto-generates if absent)
+    "sections": [
+        ("station_m",        "Chainage of this cross-section (m).",                                   0.0),
+        ("label",            "Section label (auto-generated if blank).",                              "STA_0+000"),
+        ("left_width_m",     "Sample line left offset from CL (m). Overrides project default.",       15.0),
+        ("right_width_m",    "Sample line right offset from CL (m). Overrides project default.",      15.0),
+    ],
+    # M11 — Superelevation
+    "superelevation": [
+        ("station_m",           "Start chainage of superelevation transition (m).",                   120.0),
+        ("left_slope_pct",      "Left cross-fall slope (%). Negative = downhill away from CL.",       -2.5),
+        ("right_slope_pct",     "Right cross-fall slope (%). Negative = downhill away from CL.",       2.5),
+        ("transition_length_m", "Length over which slope transitions to this value (m).",             30.0),
+    ],
+    # M13 — Plan sheet overrides (optional; M13 auto-tiles from alignment if absent)
+    "plan_sheets": [
+        ("sheet_num",        "Sheet number (integer). Auto-assigned if blank.",                        1),
+        ("sta_start_m",      "Start chainage for this plan sheet viewport (m).",                      0.0),
+        ("sta_end_m",        "End chainage for this plan sheet viewport (m).",                        500.0),
+        ("scale",            "Denominator of plan scale 1:X. Leave blank to use design.plan_scale.", 1000),
+        ("notes",            "Free-text notes for this sheet (title block).",                         ""),
+    ],
+    # M14 — Long-section sheet overrides
+    "longsection_sheets": [
+        ("sheet_num",        "Sheet number (integer).",                                                1),
+        ("sta_start_m",      "Start chainage for this longsection viewport (m).",                     0.0),
+        ("sta_end_m",        "End chainage for this longsection viewport (m).",                       500.0),
+        ("h_scale",          "Horizontal scale denominator (e.g. 1000 for 1:1000).",                 1000),
+        ("v_scale",          "Vertical scale denominator (e.g. 100 for 1:100).",                      100),
+        ("notes",            "Free-text notes.",                                                       ""),
+    ],
+    # M15 — Standard details
+    "standard_details": [
+        ("detail_id",        "Unique detail identifier.",                                              "SD-001"),
+        ("block_name",       "AutoCAD block definition name in source_dwg.",                          "STD_KERB"),
+        ("source_dwg",       "Path to the DWG file containing the block (relative to project root).", "dwg/details.dwg"),
+        ("layout_name",      "Paper-space layout to place the block in.",                             "DETAILS"),
+        ("insertion_x",      "X coordinate in the target layout (mm paper space).",                   0.0),
+        ("insertion_y",      "Y coordinate in the target layout (mm paper space).",                   0.0),
+        ("scale",            "Uniform block scale factor.",                                            1.0),
+        ("rotation_deg",     "Block rotation in degrees (0=East, CCW positive).",                      0.0),
+        ("description",      "Human-readable description of this detail.",                            "Standard kerb and channel"),
+    ],
+    # M16 — Pavement design inputs
+    "pavement_inputs": [
+        ("region_id",            "Unique pavement region identifier.",                                "R1"),
+        ("start_sta",            "Start chainage of this pavement region (m).",                       0.0),
+        ("end_sta",              "End chainage of this pavement region (m).",                         500.0),
+        ("traffic_esa_million",  "Design traffic in millions of ESAs.",                               1.5),
+        ("subgrade_cbr",         "Subgrade CBR (%) from geotechnical investigation.",                 5.0),
+        ("design_life_years",    "Pavement design life (years).",                                     20.0),
+    ],
+    # M17 — Drainage catchments
+    "catchments": [
+        ("catchment_id",           "Unique catchment identifier.",                                    "CA-001"),
+        ("area_ha",                "Catchment area (ha).",                                            2.5),
+        ("runoff_coeff",           "Rational method runoff coefficient C (0.0–1.0).",                 0.70),
+        ("tc_minutes",             "Time of concentration (minutes).",                                15.0),
+        ("rainfall_intensity_mmh", "Design rainfall intensity I (mm/h).",                            100.0),
+        ("station_m",              "Chainage of the outlet / culvert location (m).",                  250.0),
+        ("offset_m",               "Lateral offset from CL (m).",                                    8.0),
+        ("side",                   "Side of road: L or R.",                                           "R"),
+        ("invert_us_m",            "Upstream culvert invert elevation (m). Leave 0 for auto.",         0.0),
+        ("invert_ds_m",            "Downstream culvert invert elevation (m). Leave 0 for auto.",       0.0),
+        ("slope_pct",              "Culvert grade (%%). Leave 0 for auto from inverts.",               1.0),
+        ("length_m",               "Culvert barrel length (m).",                                      12.0),
+    ],
+    # M18 — Intersections
+    "intersections": [
+        ("int_id",              "Unique intersection identifier.",                                     "INT-001"),
+        ("station_m",           "Chainage of the intersection on the main alignment (m).",            300.0),
+        ("road_name",           "Name of the intersecting road.",                                     "Side Road 1"),
+        ("angle_deg",           "Skew angle relative to normal (0=perpendicular, +/-=skewed).",       0.0),
+        ("left_turn_lanes",     "Number of left turn lanes on main road approach.",                    1),
+        ("right_turn_lanes",    "Number of right turn lanes on main road approach.",                   1),
+        ("radius_m",            "Kerb return radius (m). Typical 6–15 m.",                            10.0),
+        ("approach_speed_kph",  "Design approach speed (km/h).",                                      60.0),
+    ],
 }
 
 SHEETS = [
-    ("README",           None),
-    ("alignment_pi",     "alignment_pi.csv"),
-    ("profile_pvis",     "profile_pvis.csv"),
-    ("section_widths",   "section_widths.csv"),
-    ("signage_schedule", "signage_schedule.csv"),
-    ("payitems",         "payitems.csv"),
+    ("README",            None),
+    ("alignment_pi",      "alignment_pi.csv"),
+    ("profile_pvis",      "profile_pvis.csv"),
+    ("section_widths",    "section_widths.csv"),
+    ("signage_schedule",  "signage_schedule.csv"),
+    ("payitems",          "payitems.csv"),
+    ("road_markings",     "road_markings.csv"),
+    ("sections",          "sections.csv"),
+    ("superelevation",    "superelevation.csv"),
+    ("plan_sheets",       "plan_sheets.csv"),
+    ("longsection_sheet", "longsection_sheets.csv"),
+    ("standard_details",  "standard_details.csv"),
+    ("pavement_inputs",   "pavement_inputs.csv"),
+    ("catchments",        "catchments.csv"),
+    ("intersections",     "intersections.csv"),
 ]
 
 

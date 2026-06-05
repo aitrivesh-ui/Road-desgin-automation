@@ -44,6 +44,32 @@ CSV_PATH_KEYS: dict[str, list[str]] = {
         "rotation_deg",
     ],
     "payitems": ["source", "key", "pay_item", "description", "unit"],
+    # M9 — road markings
+    "road_markings": [
+        "mark_id", "station_start_m", "station_end_m",
+        "offset_m", "side", "mark_type", "width_m",
+    ],
+    # M10 — cross-sections (optional CSV, auto-generated if absent — warn only)
+    # M11 — superelevation
+    "superelevation": [
+        "station_m", "left_slope_pct", "right_slope_pct", "transition_length_m",
+    ],
+    # M16 — pavement inputs
+    "pavement_inputs": [
+        "region_id", "start_sta", "end_sta",
+        "traffic_esa_million", "subgrade_cbr", "design_life_years",
+    ],
+    # M17 — drainage catchments
+    "catchments": [
+        "catchment_id", "area_ha", "runoff_coeff",
+        "tc_minutes", "rainfall_intensity_mmh",
+        "station_m", "offset_m", "side",
+    ],
+    # M18 — intersections
+    "intersections": [
+        "int_id", "station_m", "road_name", "angle_deg",
+        "left_turn_lanes", "right_turn_lanes", "radius_m", "approach_speed_kph",
+    ],
 }
 
 VOLUMES_HEADERS = [

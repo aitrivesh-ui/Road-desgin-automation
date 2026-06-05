@@ -55,7 +55,7 @@ def run(project_json, step_filter):
     def rp(key):
         return _resolve(root, paths[key])
 
-    steps = [s.strip().lower() for s in (step_filter or 'm1,m2,m3,m4,m5,m6,m7').split(',') if s.strip()]
+    steps = [s.strip().lower() for s in (step_filter or 'm1,m2,m3,m4,m5,m6,m7,m9,m10,m11,m12,m13,m14,m15').split(',') if s.strip()]
     log = []
     qa_rel = paths.get('qa_log', 'out/qa/run_log.txt')
     qa_path = _resolve(root, qa_rel)
@@ -172,6 +172,77 @@ def run(project_json, step_filter):
         )
         log.append('[M7] ' + str(out))
         manifest_steps.append({'step': 'm7', 'seconds': round(time.time() - t0, 3), 'output_preview': str(out)[:400]})
+
+    if 'm9' in steps:
+        t0 = time.time()
+        rm_rel = paths.get('road_markings', 'csv/road_markings.csv')
+        out = _exec_py(
+            os.path.join(pydir, 'm9_road_markings.py'),
+            [project_json],
+            g_extra,
+        )
+        log.append('[M9] ' + str(out))
+        manifest_steps.append({'step': 'm9', 'seconds': round(time.time() - t0, 3), 'output_preview': str(out)[:400]})
+
+    if 'm10' in steps:
+        t0 = time.time()
+        out = _exec_py(
+            os.path.join(pydir, 'm10_sections.py'),
+            [project_json],
+            g_extra,
+        )
+        log.append('[M10] ' + str(out))
+        manifest_steps.append({'step': 'm10', 'seconds': round(time.time() - t0, 3), 'output_preview': str(out)[:400]})
+
+    if 'm11' in steps:
+        t0 = time.time()
+        out = _exec_py(
+            os.path.join(pydir, 'm11_superelevation.py'),
+            [project_json],
+            g_extra,
+        )
+        log.append('[M11] ' + str(out))
+        manifest_steps.append({'step': 'm11', 'seconds': round(time.time() - t0, 3), 'output_preview': str(out)[:400]})
+
+    if 'm12' in steps:
+        t0 = time.time()
+        out = _exec_py(
+            os.path.join(pydir, 'm12_mass_haul.py'),
+            [project_json],
+            g_extra,
+        )
+        log.append('[M12] ' + str(out))
+        manifest_steps.append({'step': 'm12', 'seconds': round(time.time() - t0, 3), 'output_preview': str(out)[:400]})
+
+    if 'm13' in steps:
+        t0 = time.time()
+        out = _exec_py(
+            os.path.join(pydir, 'm13_plan_sheets.py'),
+            [project_json],
+            g_extra,
+        )
+        log.append('[M13] ' + str(out))
+        manifest_steps.append({'step': 'm13', 'seconds': round(time.time() - t0, 3), 'output_preview': str(out)[:400]})
+
+    if 'm14' in steps:
+        t0 = time.time()
+        out = _exec_py(
+            os.path.join(pydir, 'm14_longsection_sheets.py'),
+            [project_json],
+            g_extra,
+        )
+        log.append('[M14] ' + str(out))
+        manifest_steps.append({'step': 'm14', 'seconds': round(time.time() - t0, 3), 'output_preview': str(out)[:400]})
+
+    if 'm15' in steps:
+        t0 = time.time()
+        out = _exec_py(
+            os.path.join(pydir, 'm15_standard_details.py'),
+            [project_json],
+            g_extra,
+        )
+        log.append('[M15] ' + str(out))
+        manifest_steps.append({'step': 'm15', 'seconds': round(time.time() - t0, 3), 'output_preview': str(out)[:400]})
 
     summary = '\n'.join(log)
     try:

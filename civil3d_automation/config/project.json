@@ -7,36 +7,59 @@
     "checker": ""
   },
   "paths": {
-    "alignment_pi": "csv/alignment_pi.csv",
-    "profile_pvis": "csv/profile_pvis.csv",
-    "section_widths": "csv/section_widths.csv",
-    "signage": "csv/signage_schedule.csv",
-    "payitems": "csv/payitems.csv",
-    "volumes_csv": "out/volumes_demo.csv",
-    "boq_csv": "out/boq_demo.csv",
-    "qa_log": "out/qa/run_log.txt"
+    "alignment_pi":        "csv/alignment_pi.csv",
+    "profile_pvis":        "csv/profile_pvis.csv",
+    "section_widths":      "csv/section_widths.csv",
+    "signage":             "csv/signage_schedule.csv",
+    "payitems":            "csv/payitems.csv",
+    "road_markings":       "csv/road_markings.csv",
+    "sections":            "csv/sections.csv",
+    "superelevation":      "csv/superelevation.csv",
+    "pavement_inputs":     "csv/pavement_inputs.csv",
+    "catchments":          "csv/catchments.csv",
+    "intersections":       "csv/intersections.csv",
+    "plan_sheets":         "csv/plan_sheets.csv",
+    "longsection_sheets":  "csv/longsection_sheets.csv",
+    "standard_details":    "csv/standard_details.csv",
+    "volumes_csv":         "out/volumes.csv",
+    "boq_csv":             "out/boq.csv",
+    "mass_haul_csv":       "out/mass_haul.csv",
+    "sections_list_csv":   "out/sections_list.csv",
+    "pavement_design_csv": "out/pavement_design.csv",
+    "drainage_design_csv": "out/drainage_design.csv",
+    "qa_log":              "out/qa/run_log.txt"
   },
   "names": {
-    "alignment": "DEMO-CL",
-    "profile_fg": "DEMO-FG",
-    "corridor": "DEMO-COR",
-    "assembly": "BasicLaneAssembly",
-    "surface_eg": "EG",
-    "surface_fg": "FG",
+    "alignment":        "DEMO-CL",
+    "profile_fg":       "DEMO-FG",
+    "corridor":         "DEMO-COR",
+    "assembly":         "BasicLaneAssembly",
+    "surface_eg":       "EG",
+    "surface_fg":       "FG",
+    "sample_line_group": "SL-GROUP",
     "layers": {
-      "marking": "C-ROAD-MARK",
-      "signage": "C-SGN-FURN"
+      "marking":  "C-ROAD-MARK",
+      "signage":  "C-SGN-FURN",
+      "super":    "C-SUPER",
+      "masshaul": "C-MASSHAUL"
     }
   },
   "styles": {
-    "alignment": "Standard",
+    "alignment":       "Standard",
     "alignment_label": "Standard",
-    "profile": "Standard",
-    "profile_label": "Standard"
+    "profile":         "Standard",
+    "profile_label":   "Standard"
   },
   "design": {
-    "start_station": 0.0,
-    "max_grade_pct": 8.0,
-    "min_grade_pct": 0.3
+    "start_station":          0.0,
+    "max_grade_pct":          8.0,
+    "min_grade_pct":          0.3,
+    "plan_scale":          1000.0,
+    "sheet_width_mm":       594.0,
+    "sheet_height_mm":      420.0,
+    "section_interval_m":    25.0,
+    "section_left_width_m":  15.0,
+    "section_right_width_m": 15.0,
+    "normal_crown_m":         0.03
   }
 }

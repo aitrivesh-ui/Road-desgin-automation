@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Road Design Automation — Step-by-Step Guide</title>
+<style>
+  :root {
+    --dark:    #1c2030;
+    --mid:     #252a3a;
+    --amber:   #F0A500;
+    --green:   #1c6f44;
+    --green-l: #e8f5ee;
+    --blue:    #2563eb;
+    --blue-l:  #eff6ff;
+    --red:     #cc2222;
+    --red-l:   #fff0f0;
+    --warn:    #cc6600;
+    --warn-l:  #fff7ed;
+    --bg:      #f4f5f7;
+    --card:    #ffffff;
+    --border:  #e2e4e9;
+    --text:    #1a1d27;
+    --muted:   #666c7e;
+    --mono:    'Consolas', 'Monaco', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--dark);
+    color: #fff;
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,.4);
+  }
+  .header-inner {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .header-icon {
+    width: 40px; height: 40px;
+    background: var(--amber);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  header h1 { font-size: 1.15rem; font-weight: 700; color: var(--amber); line-height: 1.2; }
+  header p  { font-size: 0.82rem; color: #aab; margin-top: 1px; }
+
+  /* ── Progress bar ── */
+  #progress-bar {
+    height: 3px;
+    background: var(--amber);
+    width: 0%;
+    transition: width .2s;
+    position: fixed;
+    top: 0; left: 0;
+    z-index: 200;
+  }
+
+  /* ── TOC ── */
+  .toc-wrap {
+    max-width: 860px;
+    margin: 24px auto 0;
+    padding: 0 16px;
+  }
+  .toc {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 22px;
+  }
+  .toc h2 { font-size: .9rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 12px; }
+  .toc ol { padding-left: 20px; }
+  .toc li { margin: 5px 0; }
+  .toc a  { color: var(--blue); text-decoration: none; font-size: .9rem; }
+  .toc a:hover { text-decoration: underline; }
+
+  /* ── Main layout ── */
+  main {
+    max-width: 860px;
+    margin: 24px auto 60px;
+    padding: 0 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ── Step cards ── */
+  .step {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 22px;
+    cursor: pointer;
+    user-select: none;
+    transition: background .15s;
+  }
+  .step-header:hover { background: #f8f9fc; }
+  .step-num {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--dark);
+    color: var(--amber);
+    font-weight: 800;
+    font-size: .95rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-header h2 { font-size: 1.05rem; font-weight: 700; flex: 1; }
+  .step-header .badge {
+    font-size: .72rem;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge-setup   { background: #e0eaff; color: #1e40af; }
+  .badge-dynamo  { background: #ffe9d0; color: #9a3412; }
+  .badge-python  { background: var(--green-l); color: var(--green); }
+  .badge-output  { background: #f5e8ff; color: #6b21a8; }
+  .chevron {
+    color: var(--muted);
+    transition: transform .2s;
+    font-size: 1.1rem;
+  }
+  .step.open .chevron { transform: rotate(90deg); }
+
+  .step-body {
+    display: none;
+    padding: 0 22px 22px;
+    border-top: 1px solid var(--border);
+  }
+  .step.open .step-body { display: block; }
+  .step-body > *:first-child { margin-top: 18px; }
+
+  /* ── Content elements ── */
+  p    { margin: 10px 0; color: var(--text); }
+  h3   { font-size: .95rem; font-weight: 700; margin: 18px 0 8px; color: var(--dark); }
+  h4   { font-size: .88rem; font-weight: 700; margin: 14px 0 6px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  ul, ol { padding-left: 20px; margin: 8px 0; }
+  li   { margin: 5px 0; font-size: .93rem; }
+
+  /* Code */
+  code {
+    font-family: var(--mono);
+    font-size: .82rem;
+    background: #f0f2f7;
+    border: 1px solid #dde1eb;
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+  pre {
+    background: var(--dark);
+    color: #d4d4d4;
+    border-radius: 10px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: .82rem;
+    line-height: 1.6;
+    margin: 10px 0;
+    position: relative;
+  }
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: inherit;
+    color: inherit;
+  }
+  .copy-btn {
+    position: absolute;
+    top: 10px; right: 10px;
+    background: rgba(255,255,255,.12);
+    color: #ccc;
+    border: none;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: .75rem;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .copy-btn:hover { background: rgba(255,255,255,.22); color: #fff; }
+  .copy-btn.copied { color: #6ee7b7; }
+
+  /* Callouts */
+  .callout {
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin: 12px 0;
+    font-size: .9rem;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .callout-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+  .callout.tip    { background: var(--blue-l);  border-left: 4px solid var(--blue);  }
+  .callout.warn   { background: var(--warn-l);  border-left: 4px solid var(--warn);  }
+  .callout.ok     { background: var(--green-l); border-left: 4px solid var(--green); }
+  .callout.danger { background: var(--red-l);   border-left: 4px solid var(--red);   }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; margin: 12px 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .85rem;
+  }
+  th {
+    background: var(--dark);
+    color: var(--amber);
+    text-align: left;
+    padding: 9px 12px;
+    font-weight: 600;
+    font-size: .8rem;
+  }
+  td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: #f8f9fc; }
+
+  /* Checklist */
+  .checklist { list-style: none; padding: 0; margin: 10px 0; }
+  .checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: .9rem;
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist input[type=checkbox] {
+    width: 17px; height: 17px;
+    margin-top: 2px;
+    accent-color: var(--green);
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .checklist label { cursor: pointer; }
+  .checked-label { text-decoration: line-through; color: var(--muted); }
+
+  /* Module grid */
+  .module-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+    margin: 12px 0;
+  }
+  .module-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .module-card .m-id {
+    font-size: .78rem;
+    font-weight: 800;
+    color: var(--amber);
+    background: var(--dark);
+    border-radius: 4px;
+    padding: 2px 7px;
+    display: inline-block;
+    margin-bottom: 6px;
+  }
+  .module-card .m-id.py { background: var(--green); color: #fff; }
+  .module-card .m-name { font-size: .88rem; font-weight: 700; }
+  .module-card .m-desc { font-size: .8rem; color: var(--muted); margin-top: 3px; }
+
+  /* Steps inline */
+  .inline-steps { counter-reset: istep; list-style: none; padding: 0; margin: 10px 0; }
+  .inline-steps li {
+    display: flex;
+    gap: 12px;
+    margin: 10px 0;
+    align-items: flex-start;
+    font-size: .92rem;
+  }
+  .inline-steps li::before {
+    counter-increment: istep;
+    content: counter(istep);
+    min-width: 26px; height: 26px;
+    background: var(--dark);
+    color: var(--amber);
+    border-radius: 50%;
+    font-weight: 800;
+    font-size: .8rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* Output file list */
+  .file-list { list-style: none; padding: 0; margin: 8px 0; }
+  .file-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 10px;
+    border-radius: 7px;
+    margin: 4px 0;
+    background: var(--bg);
+    font-size: .88rem;
+  }
+  .file-list li .file-icon { font-size: 1rem; flex-shrink: 0; }
+  .file-list li code { background: none; border: none; padding: 0; font-size: .85rem; color: var(--blue); }
+
+  /* Filter string box */
+  .filter-box {
+    background: #f0f4e8;
+    border: 2px dashed var(--green);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: var(--mono);
+    font-size: .9rem;
+    font-weight: 700;
+    color: var(--green);
+    margin: 8px 0;
+    word-break: break-all;
+  }
+
+  /* Back to top */
+  #back-top {
+    position: fixed;
+    bottom: 24px; right: 20px;
+    background: var(--dark);
+    color: var(--amber);
+    border: none;
+    border-radius: 50%;
+    width: 44px; height: 44px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0,0,0,.3);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 90;
+    transition: opacity .2s;
+  }
+  #back-top.visible { display: flex; }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 20px;
+    font-size: .8rem;
+    color: var(--muted);
+  }
+
+  /* Mobile */
+  @media (max-width: 600px) {
+    .header-inner { padding: 12px 14px; }
+    header h1 { font-size: 1rem; }
+    main { padding: 0 10px; gap: 14px; }
+    .step-header { padding: 14px 16px; }
+    .step-body { padding: 0 16px 18px; }
+    .module-grid { grid-template-columns: 1fr 1fr; }
+    th, td { padding: 7px 9px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<header>
+  <div class="header-inner">
+    <div class="header-icon">🛣️</div>
+    <div>
+      <h1>Road Design Automation</h1>
+      <p>Step-by-step guide — M1 to M20 complete pipeline</p>
+    </div>
+  </div>
+</header>
+
+<!-- TOC -->
+<div class="toc-wrap">
+  <div class="toc">
+    <h2>Contents</h2>
+    <ol>
+      <li><a href="#s1">Prerequisites &amp; Installation</a></li>
+      <li><a href="#s2">Set Up Your Project</a></li>
+      <li><a href="#s3">Prepare Input CSV Data</a></li>
+      <li><a href="#s4">DGPS Survey → CSV (optional)</a></li>
+      <li><a href="#s5">Preflight Validation</a></li>
+      <li><a href="#s6">Open the Pipeline Launcher</a></li>
+      <li><a href="#s7">Run M1–M15 in Civil 3D (Dynamo)</a></li>
+      <li><a href="#s8">Run M16–M20 Python Tools</a></li>
+      <li><a href="#s9">Check Outputs &amp; Verify Design</a></li>
+      <li><a href="#s10">Generate the Design Report</a></li>
+      <li><a href="#s11">Module Reference</a></li>
+      <li><a href="#s12">Troubleshooting</a></li>
+    </ol>
+  </div>
+</div>
+
+<main>
+
+<!-- ════════════════════════════════════════════════════════ STEP 1 -->
+<div class="step open" id="s1">
+  <div class="step-header" onclick="toggle(this)">
+    <div class="step-num">1</div>
+    <h2>Prerequisites &amp; Installation</h2>
+    <span class="badge badge-setup">Setup</span>
+    <span class="chevron">›</span>
+  </div>
+  <div class="step-body">
+    <h3>What you need</h3>
+    <div class="table-wrap"><table>
+      <tr><th>Software</th><th>Notes</th></tr>
+      <tr><td><strong>Autodesk Civil 3D 2022+</strong></td><td>Required for M1–M15 (Dynamo runs inside Civil 3D)</td></tr>
+      <tr><td><strong>Dynamo for Civil 3D</strong></td><td>Bundled with Civil 3D — check it is enabled in Add-ins</td></tr>
+      <tr><td><strong>Python 3.8+</strong></td><td>For M16–M20 and all tools. Install from <code>python.org</code> — add to PATH</td></tr>
+      <tr><td><strong>Git</strong></td><td>To clone the repository</td></tr>
+    </table></div>
+
+    <h3>Clone the repository</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>git clone https://github.com/aitrivesh-ui/road-desgin-automation.git
+cd road-desgin-automation</code></pre>
+
+    <h3>Install Python dependencies</h3>
+    <p>On Windows, double-click <strong><code>install.bat</code></strong> at the repo root, <em>or</em> run in a terminal:</p>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>cd civil3d_automation
+pip install -r requirements-tools.txt</code></pre>
+
+    <p>This installs <strong>openpyxl</strong> (for Excel workbook generation and M19 report) and any other tool dependencies.</p>
+
+    <div class="callout ok">
+      <span class="callout-icon">✅</span>
+      <div>Once <code>pip install</code> completes with no errors, you're ready to proceed.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ STEP 2 -->
+<div class="step" id="s2">
+  <div class="step-header" onclick="toggle(this)">
+    <div class="step-num">2</div>
+    <h2>Set Up Your Project</h2>
+    <span class="badge badge-setup">Setup</span>
+    <span class="chevron">›</span>
+  </div>
+  <div class="step-body">
+    <p>Every automation run is driven by a single <strong><code>config/project.json</code></strong> file. The easiest way to create it is the Setup Wizard.</p>
+
+    <h3>Option A — Setup Wizard (GUI)</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>cd civil3d_automation
+python tools\setup_wizard.py</code></pre>
+    <p>Fill in the four tabs — Project info, Civil 3D names, Styles, Design parameters — then click <strong>Generate project.json + run preflight</strong>.</p>
+
+    <h3>Option B — CLI wizard</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>python tools\setup_wizard.py --cli</code></pre>
+
+    <h3>Option C — Copy the example</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>copy config\project.example.json config\project.json</code></pre>
+    <p>Then open it in any text editor and update the values.</p>
+
+    <h3>Key fields to set</h3>
+    <div class="table-wrap"><table>
+      <tr><th>Key</th><th>What to enter</th></tr>
+      <tr><td><code>names.alignment</code></td><td>Exact name of your Civil 3D alignment object</td></tr>
+      <tr><td><code>names.corridor</code></td><td>Exact name of your corridor object</td></tr>
+      <tr><td><code>names.assembly</code></td><td>Assembly name that exists in your template DWG</td></tr>
+      <tr><td><code>names.surface_eg</code></td><td>Existing-ground surface name (e.g. <code>EG</code>)</td></tr>
+      <tr><td><code>design.plan_scale</code></td><td>Plan sheet scale denominator (e.g. <code>1000</code> for 1:1000)</td></tr>
+      <tr><td><code>design.max_grade_pct</code></td><td>QA upper grade limit (%)</td></tr>
+    </table></div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div>All <code>paths</code> in project.json are relative to the <strong>civil3d_automation folder</strong> (the package root), not to the JSON file itself.</div>
+    </div>
+
+    <h3>Set up the template DWG</h3>
+    <p>Run the AutoLISP setup script once on a blank DWG to create all required layers:</p>
+    <ol class="inline-steps">
+      <li>Open a blank DWG in Civil 3D.</li>
+      <li>At the AutoCAD command line, type: <code>(load "path/to/setup_template.lsp")</code></li>
+      <li>The script creates 13 layers (C-ALIGN, C-PROF-FG, C-ROAD-MARK, etc.) and sets drawing units to metres.</li>
+      <li>Complete the 5 manual steps shown in the completion checklist (styles, assembly, sign blocks, EG surface).</li>
+      <li>Save as your project <code>.dwg</code> or <code>.dwt</code> template.</li>
+    </ol>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ STEP 3 -->
+<div class="step" id="s3">
+  <div class="step-header" onclick="toggle(this)">
+    <div class="step-num">3</div>
+    <h2>Prepare Input CSV Data</h2>
+    <span class="badge badge-setup">Setup</span>
+    <span class="chevron">›</span>
+  </div>
+  <div class="step-body">
+
+    <h3>Generate the Excel starter workbook</h3>
+    <p>This creates a styled <code>.xlsx</code> with example rows, tooltips, and dropdowns for every CSV:</p>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>python tools\build_starter_workbook.py</code></pre>
+    <p>Open <code>csv\templates\RoadAutomation_DataStarter.xlsx</code> in Excel, fill in your data, then export each sheet as a CSV using <strong>one</strong> of:</p>
+    <ul>
+      <li><strong>Method A</strong> — Double-click <code>tools\export_csvs.vbs</code> (Windows, exports all sheets automatically)</li>
+      <li><strong>Method B</strong> — <code>python tools\export_workbook_to_csv.py csv\templates\RoadAutomation_DataStarter.xlsx csv\</code></li>
+      <li><strong>Method C</strong> — Excel → File → Save As → CSV UTF-8 for each sheet</li>
+    </ul>
+
+    <h3>Required CSV files</h3>
+    <div class="table-wrap"><table>
+      <tr><th>File</th><th>Used by</th><th>Key columns</th></tr>
+      <tr><td><code>csv/alignment_pi.csv</code></td><td>M1</td><td>pi_id, easting, northing, radius_m, design_speed_kph</td></tr>
+      <tr><td><code>csv/profile_pvis.csv</code></td><td>M2</td><td>station_m, elevation_m, k_crest, k_sag</td></tr>
+      <tr><td><code>csv/section_widths.csv</code></td><td>M3</td><td>region_id, start_sta, end_sta, lane_width_m, shoulder_l_m, shoulder_r_m</td></tr>
+      <tr><td><code>csv/signage_schedule.csv</code></td><td>M5</td><td>row, station_m, offset_m, side, sign_code, block_name</td></tr>
+      <tr><td><code>csv/payitems.csv</code></td><td>M7</td><td>source, key, pay_item, description, unit</td></tr>
+      <tr><td><code>csv/road_markings.csv</code></td><td>M9</td><td>mark_id, station_start_m, station_end_m, side, mark_type, width_m</td></tr>
+      <tr><td><code>csv/superelevation.csv</code></td><td>M11</td><td>station_m, left_slope_pct, right_slope_pct, transition_length_m</td></tr>
+      <tr><td><code>csv/pavement_inputs.csv</code></td><td>M16</td><td>region_id, start_sta, end_sta, traffic_esa_million, subgrade_cbr, design_life_years</td></tr>
+      <tr><td><code>csv/catchments.csv</code></td><td>M17</td><td>catchment_id, area_ha, runoff_coeff, tc_minutes, rainfall_intensity_mmh</td></tr>
+      <tr><td><code>csv/intersections.csv</code></td><td>M18</td><td>int_id, station_m, road_name, angle_deg, left_turn_lanes, right_turn_lanes, radius_m</td></tr>
+    </table></div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><code>csv/sections.csv</code> is <strong>optional</strong> for M10 — if absent, cross-sections are auto-generated at the interval set in <code>design.section_interval_m</code> (default 25 m).</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ STEP 4 -->
+<div class="step" id="s4">
+  <div class="step-header" onclick="toggle(this)">
+    <div class="step-num">4</div>
+    <h2>DGPS Survey → CSV (optional)</h2>
+    <span class="badge badge-python">Python</span>
+    <span class="chevron">›</span>
+  </div>
+  <div class="step-body">
+    <p>If your geometry comes from a DGPS survey file, skip manual CSV entry and generate all input CSVs automatically.</p>
+
+    <h3>Supported formats</h3>
+    <ul>
+      <li>Generic CSV (point_id, easting, northing, elevation, code)</li>
+      <li>Trimble DC (.dc)</li>
+      <li>Leica GSI 8 / 16-word (.gsi)</li>
+      <li>LandXML (.xml)</li>
+      <li>Geographic (latitude, longitude — auto-projected)</li>
+    </ul>
+
+    <h3>Run the wizard</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>python tools\survey_to_csv.py</code></pre>
+
+    <h3>Or use the CLI</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>python tools\survey_to_csv.py --cli survey_data.csv</code></pre>
+
+    <p>The tool auto-detects the file format and outputs <code>alignment_pi.csv</code>, <code>profile_pvis.csv</code>, <code>section_widths.csv</code>, and <code>signage_schedule.csv</code> ready for M1–M5.</p>
+
+    <div class="callout ok">
+      <span class="callout-icon">✅</span>
+      <div>After this step, skip the manual CSV fill (step 3) — the survey tool has done it for you.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ STEP 5 -->
+<div class="step" id="s5">
+  <div class="step-header" onclick="toggle(this)">
+    <div class="step-num">5</div>
+    <h2>Preflight Validation</h2>
+    <span class="badge badge-python">Python</span>
+    <span class="chevron">›</span>
+  </div>
+  <div class="step-body">
+    <p>Always run preflight <strong>before</strong> opening Civil 3D. It catches missing columns, bad paths, and data errors in seconds.</p>
+
+    <h3>Basic check (headers + file paths)</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>cd civil3d_automation
+python tools\road_automation_preflight.py --validate "%CD%\config\project.json"</code></pre>
+
+    <h3>Strict check (adds data quality rules)</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>python tools\road_automation_preflight.py --validate "%CD%\config\project.json" --strict</code></pre>
+    <p>Strict mode also checks: minimum 2 alignment PIs, strictly increasing profile stations, no overlapping corridor regions.</p>
+
+    <h3>GUI mode</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>tools\run_preflight.bat</code></pre>
+
+    <h3>What to look for</h3>
+    <div class="table-wrap"><table>
+      <tr><th>Prefix</th><th>Meaning</th><th>Action</th></tr>
+      <tr><td><code>OK:</code></td><td>Check passed</td><td>Nothing to do</td></tr>
+      <tr><td><code>WARN:</code></td><td>Optional key missing</td><td>Add to project.json if module needed</td></tr>
+      <tr><td><code>INFO:</code></td><td>Output file not yet created</td><td>Normal before first run</td></tr>
+      <tr><td><code>ERROR:</code></td><td>Problem that will fail the pipeline</td><td><strong>Must fix before running</strong></td></tr>
+    </table></div>
+
+    <div class="callout danger">
+      <span class="callout-icon">🚫</span>
+      <div>Do <strong>not</strong> proceed to Civil 3D if preflight shows any <code>ERROR:</code> lines. Exit code 1 means errors exist.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ STEP 6 -->
+<div class="step" id="s6">
+  <div class="step-header" onclick="toggle(this)">
+    <div class="step-num">6</div>
+    <h2>Open the Pipeline Launcher</h2>
+    <span class="badge badge-python">Python</span>
+    <span class="chevron">›</span>
+  </div>
+  <div class="step-body">
+    <p>The Pipeline Launcher is your single control panel for <strong>all M1–M20</strong>. Open it now — keep it open throughout the workflow.</p>
+
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>cd civil3d_automation
+python tools\pipeline_launcher.py</code></pre>
+
+    <h3>The three tabs</h3>
+    <div class="table-wrap"><table>
+      <tr><th>Tab</th><th>What it does</th></tr>
+      <tr><td><strong>Select Modules</strong></td><td>Checkboxes for all M1–M20. Two columns: Civil 3D (blue) and Python tools (green). Use Select-all / Clear-all / group shortcuts.</td></tr>
+      <tr><td><strong>Dynamo (M1–M15)</strong></td><td>Shows a live step-filter string matching your selection. Click <strong>Copy to clipboard</strong> to copy it for Dynamo Player IN[1].</td></tr>
+      <tr><td><strong>Python Tools (M16–M20)</strong></td><td>Run selected Python tools directly. Status badges show waiting / running / done / error. Output streams to the log panel.</td></tr>
+    </table></div>
+
+    <h3>Before running — set project.json path</h3>
+    <p>On the <strong>Select Modules</strong> tab, click <strong>Browse…</strong> next to <em>project.json</em> and select your <code>config/project.json</code>. The status bar at the bottom confirms the active file.</p>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div>You can run only the modules you need. For example: check only M16–M18 to redo pavement and drainage after a design change, without re-running Civil 3D.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ STEP 7 -->
+<div class="step" id="s7">
+  <div class="step-header" onclick="toggle(this)">
+    <div class="step-num">7</div>
+    <h2>Run M1–M15 in Civil 3D (Dynamo)</h2>
+    <span class="badge badge-dynamo">Civil 3D</span>
+    <span class="chevron">›</span>
+  </div>
+  <div class="step-body">
+
+    <ol class="inline-steps">
+      <li>In the <strong>Pipeline Launcher → Select Modules</strong> tab, tick all Civil 3D modules you want to run (default: all M1–M15).</li>
+      <li>Click the <strong>Dynamo (M1–M15)</strong> tab — the step-filter string updates automatically.<br>
+        <div class="filter-box">m1,m2,m3,m4,m5,m6,m7,m9,m10,m11,m12,m13,m14,m15</div>
+        Click <strong>Copy to clipboard</strong>.
+      </li>
+      <li>Open your <strong>project DWG</strong> in Civil 3D.</li>
+      <li>Open <strong>Dynamo Player</strong> (Manage → Dynamo Player).</li>
+      <li>Load the graph that contains <code>m8_run_all.py</code> as its Python Script node.</li>
+      <li>Set <strong>IN[0]</strong> to the <em>absolute path</em> of your <code>config\project.json</code>, e.g.:<br>
+        <code>C:\Projects\Demo\civil3d_automation\config\project.json</code>
+      </li>
+      <li>Set <strong>IN[1]</strong> to the step-filter string you copied. Leave blank to run all M1–M15.</li>
+      <li>Click <strong>Run</strong> in Dynamo Player.</li>
+    </ol>
+
+    <h3>Recommended run order</h3>
+    <div class="table-wrap"><table>
+      <tr><th>First run</th><th>Step filter</th><th>Why</th></tr>
+      <tr><td>Geometry build</td><td><code>m1,m2,m3,m4</code></td><td>Creates alignment, profile, corridor, and volumes before anything else</td></tr>
+      <tr><td>Output generation</td><td><code>m5,m6,m7,m9,m10,m11</code></td><td>Signage, markings, sections, superelevation after corridor exists</td></tr>
+      <tr><td>Sheets &amp; analysis</td><td><code>m12,m13,m14,m15</code></td><td>Mass haul and sheet layouts after volumes are computed</td></tr>
+      <tr><td>Full re-run</td><td>*(blank)*</td><td>Runs everything M1–M15 in order</td></tr>
+    </table></div>
+
+    <h3>Individual module re-runs</h3>
+    <p>Changed only one CSV? Run just that module to save time:</p>
+    <div class="table-wrap"><table>
+      <tr><th>What changed</th><th>Step filter</th></tr>
+      <tr><td>Alignment PI coordinates</td><td><code>m1</code></td></tr>
+      <tr><td>Profile grades</td><td><code>m2</code></td></tr>
+      <tr><td>Lane/shoulder widths</td><td><code>m3,m4</code></td></tr>
+      <tr><td>Road markings</td><td><code>m9</code></td></tr>
+      <tr><td>Superelevation</td><td><code>m11</code></td></tr>
+      <tr><td>Volumes (after corridor edit)</td><td><code>m4,m7,m12</code></td></tr>
+    </table></div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div>M1 and M2 will error if an alignment/profile with the same name already exists in the drawing. Delete or rename the existing Civil 3D object before re-running M1 or M2.</div>
+    </div>
+
+    <h3>Check the QA log after running</h3>
+    <p>Open <code>out\qa\run_log.txt</code> — every step appends its output. A successful run shows <code>OK:</code> lines for each module.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ STEP 8 -->
+<div class="step" id="s8">
+  <div class="step-header" onclick="toggle(this)">
+    <div class="step-num">8</div>
+    <h2>Run M16–M20 Python Tools</h2>
+    <span class="badge badge-python">Python</span>
+    <span class="chevron">›</span>
+  </div>
+  <div class="step-body">
+    <p>These tools run independently of Civil 3D — run them any time after your CSVs are ready.</p>
+
+    <h3>Option A — Pipeline Launcher (easiest)</h3>
+    <ol class="inline-steps">
+      <li>Switch to the <strong>Python Tools (M16–M20)</strong> tab in the launcher.</li>
+      <li>Check the tools you want to run.</li>
+      <li>Click <strong>Run selected Python 3 tools</strong>.</li>
+      <li>Watch the status badges and log output.</li>
+    </ol>
+
+    <h3>Option B — Command line</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>cd civil3d_automation
+
+rem M16 — Pavement design
+python tools\pavement_design.py --cli csv\pavement_inputs.csv
+
+rem M17 — Drainage &amp; culvert sizing
+python tools\drainage_design.py --cli csv\catchments.csv
+
+rem M18 — Intersection geometry
+python tools\intersection_design.py --cli csv\intersections.csv
+
+rem M19 — Excel design report
+python tools\report_generator.py config\project.json
+
+rem M20 — Design verifier
+python tools\design_verifier.py config\project.json</code></pre>
+
+    <h3>Option C — Individual GUIs</h3>
+    <p>M16, M17, and M18 each have a full tkinter GUI with input preview and results table:</p>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>python tools\pavement_design.py
+python tools\drainage_design.py
+python tools\intersection_design.py</code></pre>
+
+    <h3>What each tool produces</h3>
+    <div class="table-wrap"><table>
+      <tr><th>Module</th><th>Output file</th><th>Contents</th></tr>
+      <tr><td>M16</td><td><code>out/pavement_design.csv</code></td><td>Layer thicknesses (wearing, base, subbase), materials per region</td></tr>
+      <tr><td>M17</td><td><code>out/drainage_design.csv</code></td><td>Culvert diameter, velocity, HW/D ratio per catchment</td></tr>
+      <tr><td>M17</td><td><code>out/culvert_schedule.csv</code></td><td>Summary schedule for contract documents</td></tr>
+      <tr><td>M18</td><td><code>out/intersection_geometry.csv</code></td><td>Kerb return arc, turning lane length, sight distance</td></tr>
+      <tr><td>M18</td><td><code>out/offset_alignment_inputs.csv</code></td><td>Offset data ready for Civil 3D offset alignment import</td></tr>
+      <tr><td>M19</td><td><code>out/report/design_report.xlsx</code></td><td>Multi-sheet Excel: Cover, Alignment, Profile, Volumes, Pavement, Drainage, BOQ, Mass Haul chart, QA Log</td></tr>
+      <tr><td>M20</td><td><code>out/design_verification.txt</code></td><td>OK / WARN / ERROR cross-check of all outputs</td></tr>
+    </table></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ STEP 9 -->
+<div class="step" id="s9">
+  <div class="step-header" onclick="toggle(this)">
+    <div class="step-num">9</div>
+    <h2>Check Outputs &amp; Verify Design</h2>
+    <span class="badge badge-output">Verify</span>
+    <span class="chevron">›</span>
+  </div>
+  <div class="step-body">
+
+    <h3>Run the design verifier (M20)</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>python tools\design_verifier.py config\project.json</code></pre>
+
+    <p>M20 cross-checks every output file and prints a pass/fail report to <code>out/design_verification.txt</code>:</p>
+
+    <div class="table-wrap"><table>
+      <tr><th>Check</th><th>What it verifies</th></tr>
+      <tr><td>Alignment</td><td>Curve radii ≥ minimum for design speed</td></tr>
+      <tr><td>Profile</td><td>Grades within <code>max_grade_pct</code> / <code>min_grade_pct</code></td></tr>
+      <tr><td>Volumes</td><td>Cut/fill non-zero, cut:fill ratio flagged if &gt;30% out of balance</td></tr>
+      <tr><td>Pavement</td><td>Total thickness 200–1000 mm</td></tr>
+      <tr><td>Drainage</td><td>HW/D ≤ 1.5; flags NO FIT catchments</td></tr>
+      <tr><td>BOQ</td><td>BOQ quantities consistent with volumes CSV (±10%)</td></tr>
+      <tr><td>Mass haul</td><td>Peak surplus/deficit within reasonable bounds</td></tr>
+    </table></div>
+
+    <p><strong>Exit code 0</strong> = PASS &nbsp;|&nbsp; <strong>Exit code 1</strong> = at least one ERROR found.</p>
+
+    <h3>Expected output files after a full run</h3>
+    <ul class="file-list">
+      <li><span class="file-icon">📄</span><code>out/volumes.csv</code> — corridor cut/fill volumes (M4)</li>
+      <li><span class="file-icon">📄</span><code>out/boq.csv</code> — bill of quantities (M7)</li>
+      <li><span class="file-icon">📄</span><code>out/sections_list.csv</code> — cross-section station list (M10)</li>
+      <li><span class="file-icon">📄</span><code>out/mass_haul.csv</code> — cumulative net volume (M12)</li>
+      <li><span class="file-icon">📄</span><code>out/pavement_design.csv</code> — layer thicknesses (M16)</li>
+      <li><span class="file-icon">📄</span><code>out/drainage_design.csv</code> — culvert schedule (M17)</li>
+      <li><span class="file-icon">📄</span><code>out/intersection_geometry.csv</code> — intersection calcs (M18)</li>
+      <li><span class="file-icon">📊</span><code>out/report/design_report.xlsx</code> — full Excel report (M19)</li>
+      <li><span class="file-icon">📋</span><code>out/design_verification.txt</code> — pass/fail (M20)</li>
+      <li><span class="file-icon">🗒️</span><code>out/qa/run_log.txt</code> — Dynamo run log (M8)</li>
+    </ul>
+
+    <h3>Post-run output check</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>python tools\design_check_outputs.py "%CD%\config\project.json"</code></pre>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ STEP 10 -->
+<div class="step" id="s10">
+  <div class="step-header" onclick="toggle(this)">
+    <div class="step-num">10</div>
+    <h2>Generate the Design Report</h2>
+    <span class="badge badge-output">Report</span>
+    <span class="chevron">›</span>
+  </div>
+  <div class="step-body">
+    <p>Once M1–M20 outputs are in place, generate the Excel report (M19):</p>
+
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>python tools\report_generator.py config\project.json</code></pre>
+
+    <p>Opens <code>out/report/design_report.xlsx</code> with these sheets:</p>
+
+    <div class="table-wrap"><table>
+      <tr><th>Sheet</th><th>Contents</th></tr>
+      <tr><td>Cover</td><td>Project details from project.json</td></tr>
+      <tr><td>Alignment</td><td>All PI coordinates and curve data</td></tr>
+      <tr><td>Profile</td><td>PVI table + elevation vs station line chart</td></tr>
+      <tr><td>Sections</td><td>Sample line station list (from M10)</td></tr>
+      <tr><td>Volumes</td><td>Cut/fill per corridor section with totals</td></tr>
+      <tr><td>Pavement</td><td>Thickness and material per region</td></tr>
+      <tr><td>Drainage</td><td>Culvert schedule with flows and sizing</td></tr>
+      <tr><td>BOQ</td><td>Bill of quantities with item totals</td></tr>
+      <tr><td>MassHaul</td><td>Cumulative net volume data + mass haul chart</td></tr>
+      <tr><td>QA Log</td><td>Contents of <code>out/qa/run_log.txt</code></td></tr>
+    </table></div>
+
+    <div class="callout ok">
+      <span class="callout-icon">✅</span>
+      <div>The report is the deliverable. Share <code>design_report.xlsx</code> for internal review and <code>design_verification.txt</code> as the QA record.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ STEP 11 -->
+<div class="step" id="s11">
+  <div class="step-header" onclick="toggle(this)">
+    <div class="step-num">11</div>
+    <h2>Module Reference</h2>
+    <span class="badge badge-setup">Reference</span>
+    <span class="chevron">›</span>
+  </div>
+  <div class="step-body">
+    <h4>Civil 3D / Dynamo — M1–M15</h4>
+    <div class="module-grid">
+      <div class="module-card"><span class="m-id">M1</span><div class="m-name">Alignment from CSV</div><div class="m-desc">Creates Civil 3D horizontal alignment with curves from alignment_pi.csv</div></div>
+      <div class="module-card"><span class="m-id">M2</span><div class="m-name">Profile from CSV</div><div class="m-desc">Creates finished-grade profile with K-values from profile_pvis.csv</div></div>
+      <div class="module-card"><span class="m-id">M3</span><div class="m-name">Corridor Regions</div><div class="m-desc">Applies lane/shoulder widths per corridor region from section_widths.csv</div></div>
+      <div class="module-card"><span class="m-id">M4</span><div class="m-name">Volumes</div><div class="m-desc">Rebuilds corridor and extracts cut/fill volumes to volumes.csv</div></div>
+      <div class="module-card"><span class="m-id">M5</span><div class="m-name">Signage</div><div class="m-desc">Inserts sign block references at correct stations from signage_schedule.csv</div></div>
+      <div class="module-card"><span class="m-id">M6</span><div class="m-name">Sheets Helper</div><div class="m-desc">Exports alignment geometry manifest for sheet layout</div></div>
+      <div class="module-card"><span class="m-id">M7</span><div class="m-name">BOQ Rollup</div><div class="m-desc">Compiles bill of quantities from volumes, markings, and signage</div></div>
+      <div class="module-card"><span class="m-id">M9</span><div class="m-name">Road Markings</div><div class="m-desc">Draws solid/dashed/arrow/transverse line markings on C-ROAD-MARK layer</div></div>
+      <div class="module-card"><span class="m-id">M10</span><div class="m-name">Cross-Sections</div><div class="m-desc">Creates SampleLineGroup + SampleLines + optional SectionView grid</div></div>
+      <div class="module-card"><span class="m-id">M11</span><div class="m-name">Superelevation</div><div class="m-desc">Assigns cross-fall via Civil 3D API; falls back to MText annotation table</div></div>
+      <div class="module-card"><span class="m-id">M12</span><div class="m-name">Mass Haul</div><div class="m-desc">Average-end-area diagram on C-MASSHAUL layer + mass_haul.csv</div></div>
+      <div class="module-card"><span class="m-id">M13</span><div class="m-name">Plan Sheets</div><div class="m-desc">Creates paper-space layouts PLAN-001, PLAN-002… tiling the alignment</div></div>
+      <div class="module-card"><span class="m-id">M14</span><div class="m-name">Long-section Sheets</div><div class="m-desc">ProfileView grid in model space for long-section sheet generation</div></div>
+      <div class="module-card"><span class="m-id">M15</span><div class="m-name">Standard Details</div><div class="m-desc">Imports block details from external DWGs into DETAILS layout</div></div>
+    </div>
+
+    <h4 style="margin-top:18px">Python 3 Tools — M16–M20</h4>
+    <div class="module-grid">
+      <div class="module-card"><span class="m-id py">M16</span><div class="m-name">Pavement Design</div><div class="m-desc">Austroads empirical thickness + material selection. GUI + CLI</div></div>
+      <div class="module-card"><span class="m-id py">M17</span><div class="m-name">Drainage Design</div><div class="m-desc">Rational method peak flow + Manning culvert sizing. GUI + CLI</div></div>
+      <div class="module-card"><span class="m-id py">M18</span><div class="m-name">Intersections</div><div class="m-desc">Turn lane geometry, kerb return arcs, sight distance. GUI + CLI</div></div>
+      <div class="module-card"><span class="m-id py">M19</span><div class="m-name">Report Generator</div><div class="m-desc">openpyxl multi-sheet Excel report with profile and mass haul charts</div></div>
+      <div class="module-card"><span class="m-id py">M20</span><div class="m-name">Design Verifier</div><div class="m-desc">Cross-checks all output CSVs. OK / WARN / ERROR report. Exit code 1 on failure</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ STEP 12 -->
+<div class="step" id="s12">
+  <div class="step-header" onclick="toggle(this)">
+    <div class="step-num">12</div>
+    <h2>Troubleshooting</h2>
+    <span class="badge badge-setup">Help</span>
+    <span class="chevron">›</span>
+  </div>
+  <div class="step-body">
+    <div class="table-wrap"><table>
+      <tr><th>Symptom</th><th>Likely cause &amp; fix</th></tr>
+      <tr><td><code>ERROR: … missing column</code> in preflight</td><td>CSV header typo or extra space. Compare to Step 3 tables. Check for BOM if using Excel on non-Windows.</td></tr>
+      <tr><td>Strict: "at least 2 PI data rows"</td><td>Only one row in <code>alignment_pi.csv</code> — add a second PI.</td></tr>
+      <tr><td>Strict: "station_m strictly increasing"</td><td>Profile stations out of order or duplicated — sort and deduplicate.</td></tr>
+      <tr><td>Strict: "overlapping regions"</td><td><code>section_widths</code> station ranges overlap — adjust <code>end_sta</code> of earlier region.</td></tr>
+      <tr><td><code>ERROR: Alignment not found: MAIN-CL</code></td><td><code>names.alignment</code> in project.json doesn't match the Civil 3D object name exactly (case-sensitive).</td></tr>
+      <tr><td>M4 volumes all zero</td><td>EG or FG surface missing in DWG, or surface names don't match <code>names.surface_eg/fg</code> in project.json.</td></tr>
+      <tr><td>M9: marking entity not created</td><td>Block definition <code>MARK_&lt;type&gt;</code> not in DWG for arrow types. M9 logs WARN and continues — solid line used as fallback.</td></tr>
+      <tr><td>M10: SectionView not created</td><td>SectionView API varies by Civil 3D version. M10 logs NOTE and skips — sample lines are still created.</td></tr>
+      <tr><td>M16 <code>KeyError</code></td><td><code>pavement_inputs.csv</code> is missing a required column. Run preflight first.</td></tr>
+      <tr><td>M17: <code>NO FIT</code> in drainage output</td><td>Peak flow exceeds the largest culvert (3000 mm). Use a box culvert or twin pipes.</td></tr>
+      <tr><td>M19: <code>ImportError: openpyxl</code></td><td>Run <code>pip install openpyxl</code> or re-run <code>install_tools.bat</code>.</td></tr>
+      <tr><td>Dynamo: "CSV not found"</td><td>Wrong absolute path in IN[0], or <code>paths</code> in project.json not relative to <code>civil3d_automation</code> root.</td></tr>
+      <tr><td>Pipeline launcher: tools not running</td><td>Check the <code>project.json</code> path shown in the status bar at the bottom of the launcher.</td></tr>
+    </table></div>
+
+    <h3>Still stuck?</h3>
+    <p>Check <code>out/qa/run_log.txt</code> for the last Dynamo run output. Each module appends its full output string, including any Python traceback.</p>
+  </div>
+</div>
+
+<!-- ════════════════ END-TO-END CHECKLIST ════════════════ -->
+<div class="step open" id="checklist-card" style="border-color: var(--amber); border-width: 2px;">
+  <div class="step-header" onclick="toggle(this)" style="background: linear-gradient(135deg, #1c2030 0%, #252a3a 100%);">
+    <div class="step-num" style="background: var(--amber); color: var(--dark);">✓</div>
+    <h2 style="color: var(--amber);">End-to-End Run Checklist</h2>
+    <span class="chevron" style="color: var(--amber);">›</span>
+  </div>
+  <div class="step-body">
+    <p style="color:var(--muted); font-size:.88rem">Tick each item as you go.</p>
+    <ul class="checklist" id="cl">
+      <li><input type="checkbox" id="c1" onchange="strikeItem(this)"><label for="c1">Install Python 3 and run <code>pip install -r requirements-tools.txt</code></label></li>
+      <li><input type="checkbox" id="c2" onchange="strikeItem(this)"><label for="c2">Create <code>config/project.json</code> using the Setup Wizard</label></li>
+      <li><input type="checkbox" id="c3" onchange="strikeItem(this)"><label for="c3">Set up template DWG (run <code>setup_template.lsp</code>, add styles/assembly/surfaces)</label></li>
+      <li><input type="checkbox" id="c4" onchange="strikeItem(this)"><label for="c4">Fill input CSV files (or use <code>survey_to_csv.py</code> for DGPS data)</label></li>
+      <li><input type="checkbox" id="c5" onchange="strikeItem(this)"><label for="c5">Run preflight: <code>python tools\road_automation_preflight.py --validate config\project.json --strict</code> — zero errors</label></li>
+      <li><input type="checkbox" id="c6" onchange="strikeItem(this)"><label for="c6">Open <code>python tools\pipeline_launcher.py</code> — set project.json path</label></li>
+      <li><input type="checkbox" id="c7" onchange="strikeItem(this)"><label for="c7">Select modules → copy Dynamo step filter → run <code>m8_run_all</code> in Dynamo Player</label></li>
+      <li><input type="checkbox" id="c8" onchange="strikeItem(this)"><label for="c8">Verify <code>out/volumes.csv</code>, <code>out/boq.csv</code>, <code>out/mass_haul.csv</code> exist</label></li>
+      <li><input type="checkbox" id="c9" onchange="strikeItem(this)"><label for="c9">In launcher Python Tools tab — run M16, M17, M18</label></li>
+      <li><input type="checkbox" id="c10" onchange="strikeItem(this)"><label for="c10">Run M20 design verifier — result is PASS or PASS WITH WARNINGS</label></li>
+      <li><input type="checkbox" id="c11" onchange="strikeItem(this)"><label for="c11">Run M19 report generator — open <code>out/report/design_report.xlsx</code></label></li>
+      <li><input type="checkbox" id="c12" onchange="strikeItem(this)"><label for="c12">Commit input CSVs + project.json to version control</label></li>
+    </ul>
+    <div style="margin-top:10px">
+      <button onclick="resetChecklist()" style="font-size:.8rem; padding:5px 12px; border:1px solid var(--border); border-radius:6px; background:var(--bg); cursor:pointer; color:var(--muted);">Reset checklist</button>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<footer>Road Design Automation — M1 to M20 &nbsp;|&nbsp; <a href="TESTING.md" style="color:var(--blue)">TESTING.md</a></footer>
+
+<button id="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+
+<script>
+  // Toggle step
+  function toggle(header) {
+    header.parentElement.classList.toggle('open');
+  }
+
+  // Copy code blocks
+  function copyCode(btn) {
+    const code = btn.nextSibling.textContent;
+    navigator.clipboard.writeText(code).then(() => {
+      btn.textContent = 'Copied ✓';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1800);
+    });
+  }
+
+  // Checklist strike-through
+  function strikeItem(cb) {
+    const label = cb.nextElementSibling;
+    label.classList.toggle('checked-label', cb.checked);
+    saveChecklist();
+  }
+
+  function saveChecklist() {
+    const state = {};
+    document.querySelectorAll('#cl input[type=checkbox]').forEach(cb => {
+      state[cb.id] = cb.checked;
+    });
+    try { localStorage.setItem('rda_checklist', JSON.stringify(state)); } catch(e) {}
+  }
+
+  function loadChecklist() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('rda_checklist') || '{}');
+      document.querySelectorAll('#cl input[type=checkbox]').forEach(cb => {
+        if (saved[cb.id]) {
+          cb.checked = true;
+          cb.nextElementSibling.classList.add('checked-label');
+        }
+      });
+    } catch(e) {}
+  }
+
+  function resetChecklist() {
+    document.querySelectorAll('#cl input[type=checkbox]').forEach(cb => {
+      cb.checked = false;
+      cb.nextElementSibling.classList.remove('checked-label');
+    });
+    try { localStorage.removeItem('rda_checklist'); } catch(e) {}
+  }
+
+  // Progress bar
+  function updateProgress() {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+    document.getElementById('progress-bar').style.width = pct + '%';
+    const btn = document.getElementById('back-top');
+    btn.classList.toggle('visible', scrollTop > 300);
+  }
+
+  window.addEventListener('scroll', updateProgress, { passive: true });
+
+  // Auto-open step from hash
+  function openFromHash() {
+    const hash = location.hash;
+    if (hash) {
+      const el = document.querySelector(hash);
+      if (el && el.classList.contains('step')) {
+        el.classList.add('open');
+        setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+      }
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadChecklist();
+    openFromHash();
+  });
+</script>
+</body>
+</html>

@@ -327,6 +327,14 @@ def _build_readme_sheet(wb: Workbook) -> None:
 # ── Entry point ─────────────────────────────────────────────────────────────
 
 def main() -> None:
+    import sys
+    out_path = OUT
+    args = sys.argv[1:]
+    if "--out" in args:
+        idx = args.index("--out")
+        if idx + 1 < len(args):
+            out_path = args[idx + 1]
+
     wb = Workbook()
     wb.remove(wb.active)  # remove default blank sheet
 
@@ -336,8 +344,9 @@ def main() -> None:
         else:
             _build_data_sheet(wb, sheet_name)
 
-    wb.save(OUT)
-    print("Wrote", OUT)
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    wb.save(out_path)
+    print("Wrote", out_path)
     print("  Sheets     :", ", ".join(s for s, _ in SHEETS))
     print("  Example row: row 2 on each data sheet (greyed, replace with real data).")
     print("  Validation  : signage_schedule.side column has L/R dropdown.")

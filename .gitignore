@@ -16,3 +16,6 @@ Thumbs.db
 *.swp
 .idea/
 .vscode/
+
+# Claude Code internal state
+.claude/

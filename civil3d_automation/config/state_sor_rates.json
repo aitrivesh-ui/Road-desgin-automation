@@ -1,0 +1,57 @@
+{
+  "version": "2024-sample",
+  "states": {
+    "HR": {"name": "Haryana PWD CSR", "currency": "INR", "default_rate_factor": 0.95},
+    "PB": {"name": "Punjab PWD CSR", "currency": "INR", "default_rate_factor": 0.98},
+    "UP": {"name": "Uttar Pradesh PWD CSR", "currency": "INR", "default_rate_factor": 0.88},
+    "RJ": {"name": "Rajasthan PWD CSR", "currency": "INR", "default_rate_factor": 0.90},
+    "DL": {"name": "CPWD Delhi", "currency": "INR", "default_rate_factor": 1.00},
+    "MH": {"name": "Maharashtra PWD CSR", "currency": "INR", "default_rate_factor": 1.12},
+    "GJ": {"name": "Gujarat PWD CSR", "currency": "INR", "default_rate_factor": 1.05},
+    "KA": {"name": "Karnataka PWD CSR", "currency": "INR", "default_rate_factor": 1.08}
+  },
+  "items": {
+    "DL": {
+      "volumes|cut_haul_m3": 450.0,
+      "volumes|fill_borrow_m3": 380.0,
+      "volumes|cut_m3": 450.0,
+      "volumes|fill_m3": 380.0,
+      "marking|M1": 120.0,
+      "marking|CL-D": 85.0,
+      "pavement|gsb": 420.0,
+      "pavement|wmm": 480.0,
+      "pavement|dbm": 5200.0,
+      "pavement|bc": 6800.0,
+      "signage|SGN_STOP": 8500.0,
+      "signage|SGN_SPEED_50": 7800.0,
+      "signage|SGN_W1": 3200.0
+    },
+    "HR": {
+      "volumes|cut_haul_m3": 428.0,
+      "volumes|fill_borrow_m3": 361.0,
+      "volumes|cut_m3": 428.0,
+      "volumes|fill_m3": 361.0,
+      "marking|M1": 114.0,
+      "marking|CL-D": 81.0,
+      "signage|SGN_STOP": 8075.0
+    },
+    "PB": {
+      "volumes|cut_haul_m3": 441.0,
+      "volumes|fill_borrow_m3": 372.0
+    },
+    "UP": {
+      "volumes|cut_haul_m3": 396.0,
+      "volumes|fill_borrow_m3": 334.0
+    },
+    "RJ": {
+      "volumes|cut_haul_m3": 410.0,
+      "volumes|fill_borrow_m3": 346.0
+    }
+  },
+  "taxes": {
+    "contingency_pct": 5.0,
+    "gst_pct": 18.0,
+    "labour_cess_pct": 1.0,
+    "supervision_pct": 2.0
+  }
+}

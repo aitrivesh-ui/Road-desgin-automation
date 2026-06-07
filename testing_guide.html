@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Road automation — complete system testing guide</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+:root {
+  --bg: #f4f2ed;
+  --card: #fff;
+  --ink: #1a1a18;
+  --muted: #5c574f;
+  --rule: #ddd8cf;
+  --accent: #1a6b52;
+  --accent-l: #e8f5f0;
+  --warn: #b45309;
+  --err: #b91c1c;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'DM Sans', system-ui, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 15px; }
+body { font-family: var(--sans); background: var(--bg); color: var(--ink); line-height: 1.65; }
+header {
+  background: linear-gradient(135deg, #0f2e26 0%, #1a4d3e 100%);
+  color: #fff;
+  padding: 2.5rem 2rem 2rem;
+}
+header h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 700; letter-spacing: -0.02em; }
+header p { margin-top: 0.75rem; max-width: 52rem; color: rgba(255,255,255,0.75); font-size: 0.95rem; }
+.badge { display: inline-block; margin-top: 1rem; font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.25rem 0.6rem; border: 1px solid rgba(255,255,255,0.25); border-radius: 3px; }
+nav {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(244,242,237,0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--rule);
+  overflow-x: auto;
+}
+nav ul { display: flex; gap: 0; list-style: none; padding: 0 1rem; max-width: 960px; margin: 0 auto; }
+nav a {
+  display: block; padding: 0.75rem 0.9rem;
+  font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--muted); text-decoration: none; white-space: nowrap;
+  border-bottom: 2px solid transparent;
+}
+nav a:hover { color: var(--ink); }
+nav a.active { color: var(--accent); border-bottom-color: var(--accent); }
+main { max-width: 960px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+section { margin-bottom: 3rem; scroll-margin-top: 4rem; }
+h2 { font-size: 1.45rem; font-weight: 700; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
+h3 { font-size: 1.05rem; font-weight: 600; margin: 1.5rem 0 0.6rem; }
+.lead { color: var(--muted); margin-bottom: 1.25rem; max-width: 42rem; }
+.card {
+  background: var(--card); border: 1px solid var(--rule); border-radius: 6px;
+  padding: 1.1rem 1.25rem; margin: 1rem 0;
+}
+.phase {
+  display: grid; grid-template-columns: 48px 1fr; gap: 1rem; align-items: start;
+  margin: 1rem 0; padding: 1rem; background: var(--card); border: 1px solid var(--rule); border-radius: 6px;
+}
+.phase-n {
+  width: 48px; height: 48px; border-radius: 6px; background: var(--accent);
+  color: #fff; font-weight: 700; font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.phase h3 { margin: 0 0 0.35rem; }
+pre, code { font-family: var(--mono); font-size: 0.8rem; }
+pre {
+  background: #1e1e1c; color: #d4d0c8; padding: 1rem 1.1rem; border-radius: 5px;
+  overflow-x: auto; margin: 0.75rem 0; line-height: 1.55;
+}
+table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin: 0.75rem 0; }
+th, td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid var(--rule); }
+th { background: var(--accent-l); font-weight: 600; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.checklist { list-style: none; margin: 0.5rem 0; }
+.checklist li {
+  padding: 0.45rem 0 0.45rem 1.6rem; position: relative; border-bottom: 1px solid var(--rule);
+  font-size: 0.88rem;
+}
+.checklist li::before {
+  content: ''; position: absolute; left: 0; top: 0.55rem;
+  width: 14px; height: 14px; border: 2px solid var(--rule); border-radius: 2px;
+}
+.alert {
+  border-left: 3px solid var(--accent); background: var(--accent-l);
+  padding: 0.75rem 1rem; margin: 1rem 0; font-size: 0.88rem; border-radius: 0 4px 4px 0;
+}
+.alert.warn { border-color: var(--warn); background: #fff7ed; }
+.alert.err { border-color: var(--err); background: #fef2f2; }
+.flow {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem;
+  font-family: var(--mono); font-size: 0.68rem; margin: 1rem 0;
+}
+.flow span { background: var(--card); border: 1px solid var(--rule); padding: 0.3rem 0.55rem; border-radius: 3px; }
+.flow .arr { color: var(--muted); border: none; background: none; padding: 0 0.2rem; }
+footer { text-align: center; padding: 2rem; font-size: 0.75rem; color: var(--muted); border-top: 1px solid var(--rule); }
+a { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Complete system testing guide</h1>
+  <p>Validate the road design automation pipeline from Python unit tests through Civil 3D + Dynamo (M8). Follow the phases in order; each phase has pass criteria before you continue.</p>
+  <span class="badge">civil3d_automation · M0–M8</span>
+</header>
+
+<nav>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#prereq">Prerequisites</a></li>
+    <li><a href="#phase1">Phase 1</a></li>
+    <li><a href="#phase2">Phase 2</a></li>
+    <li><a href="#phase3">Phase 3</a></li>
+    <li><a href="#phase4">Phase 4</a></li>
+    <li><a href="#modules">Modules</a></li>
+    <li><a href="#trouble">Troubleshoot</a></li>
+    <li><a href="#commands">Commands</a></li>
+  </ul>
+</nav>
+
+<main>
+
+<section id="overview">
+  <h2>What you are testing</h2>
+  <p class="lead">Two layers: <strong>Python 3 tools</strong> (no Civil 3D) and <strong>Civil 3D + Dynamo</strong> (full pipeline).</p>
+  <table>
+    <thead><tr><th>Layer</th><th>Tools</th><th>Proves</th></tr></thead>
+    <tbody>
+      <tr><td>Offline</td><td><code>run_tests.bat</code>, preflight, <code>design_check_outputs.py</code></td><td>CSV contracts, IRC engines, BOQ math, manifest logic</td></tr>
+      <tr><td>Civil 3D</td><td><code>m8_run_all.py</code> (or M1→M7 individually)</td><td>Alignment, profile, corridor, volumes, markings, signs, BOQ, DPR manifest</td></tr>
+    </tbody>
+  </table>
+  <h3>M8 default run order</h3>
+  <div class="flow" style="display:flex">
+    <span>m1</span><span class="arr">→</span><span>m2</span><span class="arr">→</span><span>m3</span><span class="arr">→</span><span>m4</span><span class="arr">→</span><span>m0</span><span class="arr">→</span><span>m5</span><span class="arr">→</span><span>m6</span><span class="arr">→</span><span>m7</span>
+  </div>
+  <p class="lead" style="margin-top:0.5rem">Handbook M06 (BOQ) = repo <code>m7_boq_rollup.py</code>. Handbook M07 (DPR) = repo <code>m6_sheets_helper.py</code>.</p>
+</section>
+
+<section id="prereq">
+  <h2>Prerequisites</h2>
+  <ul class="checklist">
+    <li><strong>Python 3.8+</strong> on PATH (separate from Civil’s IronPython 2)</li>
+    <li>Run <code>install.bat</code> at repo root or <code>civil3d_automation\install_tools.bat</code> once</li>
+    <li><strong>Autodesk Civil 3D</strong> 2022+ with Dynamo and <strong>IronPython 2</strong> for Python Script nodes</li>
+    <li>Template DWG: layers from <code>template/layers_bim.csv</code>; assembly, corridor, EG/FG names match <code>config/project.json</code></li>
+    <li><code>config/project.json</code> (copy from <code>project.example.json</code> if missing)</li>
+  </ul>
+</section>
+
+<section id="phase1">
+  <h2>Phase 1 — Install &amp; unit tests (no Civil)</h2>
+
+  <div class="phase">
+    <div class="phase-n">1</div>
+    <div>
+      <h3>Install Python tool dependencies</h3>
+      <p>From the repository root:</p>
+      <pre>install.bat</pre>
+      <p>Or from <code>civil3d_automation</code>:</p>
+      <pre>install_tools.bat</pre>
+      <p><strong>Pass:</strong> pip installs <code>requirements-tools.txt</code>; <code>config/project.json</code> created if absent.</p>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-n">2</div>
+    <div>
+      <h3>Run all unit tests</h3>
+      <pre>cd civil3d_automation
+run_tests.bat</pre>
+      <p><strong>Pass:</strong> <code>Ran 90+ tests … OK</code> (exact count may grow). Any failure blocks Phase 2.</p>
+    </div>
+  </div>
+</section>
+
+<section id="phase2">
+  <h2>Phase 2 — Preflight &amp; config validation</h2>
+
+  <div class="phase">
+    <div class="phase-n">3</div>
+    <div>
+      <h3>Validate paths and CSV headers</h3>
+      <pre>cd civil3d_automation
+python tools\road_automation_preflight.py --validate "%CD%\config\project.json"</pre>
+      <p><strong>Pass:</strong> No lines starting with <code>ERROR:</code>. Exit code 0.</p>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-n">4</div>
+    <div>
+      <h3>Strict data checks (recommended)</h3>
+      <pre>python tools\road_automation_preflight.py --validate "%CD%\config\project.json" --strict</pre>
+      <p><strong>Pass:</strong> At least 2 alignment PIs; profile stations strictly increasing; corridor regions not overlapping.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Required CSV columns</h3>
+    <table>
+      <thead><tr><th>Path key</th><th>Columns</th></tr></thead>
+      <tbody>
+        <tr><td><code>alignment_pi</code></td><td><code>pi_id, easting, northing, radius_m, spiral_in_m, spiral_out_m, design_speed_kph</code></td></tr>
+        <tr><td><code>profile_pvis</code></td><td><code>station_m, elevation_m, k_crest, k_sag, curve_length_m</code></td></tr>
+        <tr><td><code>section_widths</code></td><td><code>region_id, start_sta, end_sta, lane_width_m, shoulder_l_m, shoulder_r_m, target_l, target_r</code></td></tr>
+        <tr><td><code>signage</code></td><td><code>row, station_m, offset_m, side, sign_code, block_name, rotation_deg</code></td></tr>
+        <tr><td><code>payitems</code></td><td><code>source, key, pay_item, description, unit</code></td></tr>
+        <tr><td><code>markings_schedule</code></td><td>See <code>csv/templates/markings_schedule.csv</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="phase3">
+  <h2>Phase 3 — Civil 3D template &amp; Dynamo setup</h2>
+
+  <div class="phase">
+    <div class="phase-n">5</div>
+    <div>
+      <h3>Prepare template drawing</h3>
+      <ul class="checklist">
+        <li>Create layers from <code>template/layers_bim.csv</code> (e.g. <code>C-ROAD-ALIGN-HORZ</code>, <code>C-ROAD-MARK-THERMO</code>)</li>
+        <li>EG and FG surfaces named in <code>project.json</code> → <code>names.surfaces</code></li>
+        <li>Assembly name matches <code>names.assembly</code> (example: <code>BasicLaneAssembly</code>)</li>
+        <li>IRC:67 sign blocks referenced in <code>csv/signage_schedule.csv</code> exist in the DWG</li>
+        <li>MoRTH title block on layouts if testing M6 title attributes</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-n">6</div>
+    <div>
+      <h3>Wire Dynamo graphs</h3>
+      <p>For each module, add a <strong>Python Script</strong> node (engine: <strong>IronPython 2</strong>), paste the matching file from <code>python/</code>, and connect inputs per script header comments.</p>
+      <p>Minimum for full test: one graph hosting <code>m8_run_all.py</code> with:</p>
+      <ul class="checklist">
+        <li><strong>IN[0]</strong> — absolute path to <code>config\project.json</code></li>
+        <li><strong>IN[1]</strong> (optional) — step list, e.g. <code>m1,m2,m3,m4,m0,m5,m6,m7</code></li>
+      </ul>
+      <p>Save <code>.dyn</code> files under <code>dynamo/</code>. Set Run mode to <strong>Manual</strong>.</p>
+      <div class="alert warn">No pre-built <code>.dyn</code> ships in the repo — you build graphs once per Civil/Dynamo version.</div>
+    </div>
+  </div>
+</section>
+
+<section id="phase4">
+  <h2>Phase 4 — End-to-end M8 run</h2>
+
+  <div class="phase">
+    <div class="phase-n">7</div>
+    <div>
+      <h3>Incremental Civil smoke (recommended first)</h3>
+      <table>
+        <thead><tr><th>IN[1] steps</th><th>Verify</th></tr></thead>
+        <tbody>
+          <tr><td><code>m1</code></td><td>Alignment created; <code>out/curve_table.csv</code></td></tr>
+          <tr><td><code>m1,m2</code></td><td>Profile; <code>out/pvi_table.json</code></td></tr>
+          <tr><td><code>m1,m2,m3,m4</code></td><td>Corridor regions; <code>out/volumes.csv</code>, mass haul files</td></tr>
+          <tr><td>Full default</td><td>All artifacts below</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-n">8</div>
+    <div>
+      <h3>Full pipeline pass criteria</h3>
+      <ul class="checklist">
+        <li>M8 <code>OUT</code> status OK (or WARN only — no ERROR unless acceptable)</li>
+        <li><code>out/volumes.csv</code> — summary row with <code>cut_haul_m3</code>, <code>fill_borrow_m3</code></li>
+        <li><code>out/boq.csv</code> — pay items + abstract (GST, labour cess, supervision)</li>
+        <li><code>out/dpr_sheet_manifest.json</code> — PKG drawing numbers</li>
+        <li><code>out/qa/last_run_manifest.json</code> — step list matches M8 order</li>
+        <li><code>out/marking_qty.csv</code> — if markings enabled</li>
+      </ul>
+      <pre>python tools\design_check_outputs.py "%CD%\config\project.json"</pre>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-n">9</div>
+    <div>
+      <h3>Optional offline checks after M4</h3>
+      <pre>python tools\export_mass_haul_chart.py --project config\project.json
+python tools\harvest_xdata_quantities.py --project config\project.json</pre>
+      <p>Mass haul chart → SVG in <code>out/</code>. Harvest tool writes stub JSON contracts (live BOQ scan runs inside Civil via M7).</p>
+    </div>
+  </div>
+</section>
+
+<section id="modules">
+  <h2>Module acceptance (detailed)</h2>
+  <p class="lead">Run targeted unit tests from <code>civil3d_automation</code> before Civil QA on each module.</p>
+
+  <div class="card">
+    <h3>M1 — Alignment</h3>
+    <pre>python -m unittest tools.test_irc38_geometry tools.test_alignment_entities -v</pre>
+    <p>Sample <code>csv/alignment_pi.csv</code> PI A2 (R=150 m @ 80 kph) should log <code>IRC38_R_MIN</code> WARN. With <code>design.strict_log: true</code>, critical radius → ERROR blocks M8.</p>
+  </div>
+
+  <div class="card">
+    <h3>M2 — Profile</h3>
+    <pre>python -m unittest tools.test_irc66_profile -v</pre>
+    <p>Use <code>csv/templates/profile_pvis_crest_short_vc.csv</code> → expect <code>IRC66_K_CREST</code>. Sag drainage fixture → <code>IRC73_DRAINAGE</code>.</p>
+  </div>
+
+  <div class="card">
+    <h3>M3 — Corridor regions + IRC:37</h3>
+    <pre>python -m unittest tools.test_irc37_engine tools.test_m4_region_volumes -v</pre>
+    <p>After M3: <code>out/irc37_layers.json</code> or cache path in <code>project.json</code>.</p>
+  </div>
+
+  <div class="card">
+    <h3>M4 — Volumes &amp; earthwork</h3>
+    <pre>python -m unittest tools.test_swell_shrinkage -v</pre>
+    <ul class="checklist">
+      <li>Ordinary soil: <code>cut_haul_m3 ≈ cut_m3 × 1.25</code></li>
+      <li><code>fill_borrow_m3 ≈ fill_m3 / 0.90</code></li>
+      <li><code>out/mass_haul_meta.json</code> includes <code>economic_lead_m</code></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>M0 — Markings</h3>
+    <pre>python -m unittest tools.test_m0_marking_qty -v</pre>
+    <p>Requires M1 <code>curve_table</code>. In Civil: CL-D 3 m / 5 m dashes; no-passing → CL-DY; idempotent XData <code>IRC35_ROAD_MARK_V2</code>.</p>
+  </div>
+
+  <div class="card">
+    <h3>M5 — Signage</h3>
+    <pre>python -m unittest tools.test_m5_signage_schedule -v
+python python\m5_build_signage_schedule.py --project config\project.json</pre>
+    <p>Auto schedule needs M1 curve table + M4 fill depth for guardrails. Run M4 before M5 when guardrails required.</p>
+  </div>
+
+  <div class="card">
+    <h3>M6 — DPR manifest (offline)</h3>
+    <pre>python python\dpr_sheet_core.py --project config\project.json
+python -m unittest tools.test_m6_dpr_manifest -v</pre>
+    <p>L=1400 m → 3 PP sheets (500 m each). PDF: <code>out/pdf/publish.scr</code> — run SCRIPT in Civil manually.</p>
+  </div>
+
+  <div class="card">
+    <h3>M7 — BOQ</h3>
+    <pre>python -m unittest tools.test_m7_boq_rollup -v</pre>
+    <p>Set <code>boq.state_code</code> (e.g. HR, UP) for state SOR from <code>config/state_sor_rates.json</code>.</p>
+  </div>
+</section>
+
+<section id="trouble">
+  <h2>Troubleshooting</h2>
+  <table>
+    <thead><tr><th>Symptom</th><th>Likely cause</th></tr></thead>
+    <tbody>
+      <tr><td>Preflight <code>ERROR: missing column</code></td><td>CSV header typo — compare Phase 2 table</td></tr>
+      <tr><td>Alignment/profile already exists</td><td>Delete or rename Civil object before re-run M1/M2</td></tr>
+      <tr><td>M4 zero / wrong volumes</td><td>Wrong EG/FG or corridor name in template vs <code>project.json</code></td></tr>
+      <tr><td>M0 skipped / no curve table</td><td>Run M1 first; check <code>pipeline.run_markings</code></td></tr>
+      <tr><td>Dynamo CSV not found</td><td>Use <strong>absolute</strong> path to <code>project.json</code>; paths inside JSON are relative to <code>civil3d_automation/</code></td></tr>
+      <tr><td>M8 blocked (strict_log)</td><td>Fix ERROR entries in structured log before continuing</td></tr>
+    </tbody>
+  </table>
+  <div class="alert">Markdown copy of this guide: <code>civil3d_automation/TESTING.md</code></div>
+</section>
+
+<section id="commands">
+  <h2>Command reference (copy-paste)</h2>
+  <pre>cd civil3d_automation
+
+:: Phase 1
+run_tests.bat
+
+:: Phase 2
+python tools\road_automation_preflight.py --validate config\project.json
+python tools\road_automation_preflight.py --validate config\project.json --strict
+
+:: After Civil M8
+python tools\design_check_outputs.py config\project.json
+python tools\export_mass_haul_chart.py --project config\project.json
+
+:: Clone new job
+python tools\clone_new_job.py --dest "D:\jobs\Demo\civil3d_automation"</pre>
+</section>
+
+</main>
+
+<footer>
+  Road design automation · Testing guide · Pair with <code>civil3d_automation/TESTING.md</code>
+</footer>
+
+<script>
+const links = document.querySelectorAll('nav a');
+const ids = [...links].map(a => a.getAttribute('href').slice(1));
+window.addEventListener('scroll', () => {
+  let cur = ids[0];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top < 100) cur = id;
+  });
+  links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + cur));
+});
+</script>
+</body>
+</html>

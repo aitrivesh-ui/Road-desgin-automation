@@ -1,0 +1,10 @@
+boq_column,excel_column,notes
+pay_item,Schedule A Item No,MoRTH chapter item
+description,Description,
+unit,Unit,
+quantity,Quantity,
+rate,Rate INR,
+amount,Amount INR,
+source,Internal source,not exported to client BOQ
+key,Internal key,ABSTRACT rows use key for abstract mapping
+morh_chapter,MoRTH Chapter,from payitems.csv when present

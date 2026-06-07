@@ -1,0 +1,61 @@
+{
+  "catalogue_version": "IRC:67-2012-handbook",
+  "warning_advance_m": 60,
+  "guardrail_fill_threshold_m": 3,
+  "delineator_spacing_m": {
+    "lt_300": 8,
+    "300_to_600": 15
+  },
+  "km_post_spacing_by_road_class": {
+    "nh_sh": 500,
+    "urban": 200
+  },
+  "signs": {
+    "W-1": {
+      "sign_code": "W-1",
+      "block_name": "SGN_W1_CURVE",
+      "description": "Right hand curve warning (IRC:67)",
+      "payitem_key": "SGN_W1",
+      "default_offset_m": 4.5,
+      "w2_radius_max_m": 300,
+      "w2_deflection_min_deg": 25
+    },
+    "W-2": {
+      "sign_code": "W-2",
+      "block_name": "SGN_W2_CURVE",
+      "description": "Sharp curve warning (IRC:67)",
+      "payitem_key": "SGN_W2",
+      "default_offset_m": 4.5
+    },
+    "KM": {
+      "sign_code": "KM",
+      "block_name": "SGN_KM_POST",
+      "description": "Kilometre post",
+      "payitem_key": "SGN_KM_POST",
+      "default_offset_m": 4.5
+    },
+    "DELINEATOR": {
+      "sign_code": "DELINEATOR",
+      "block_name": "SGN_DELINEATOR",
+      "description": "Road delineator (IRC:SP:52)",
+      "payitem_key": "SGN_DELINEATOR",
+      "default_offset_m": 1.0
+    },
+    "GUARDRAIL": {
+      "sign_code": "GUARDRAIL",
+      "block_name": "SGN_GUARDRAIL_W_BEAM",
+      "description": "W-beam crash barrier (IRC:SP:73)",
+      "payitem_key": "SGN_GUARDRAIL",
+      "default_offset_m": 2.5
+    }
+  },
+  "known_block_names": [
+    "SGN_W1_CURVE",
+    "SGN_W2_CURVE",
+    "SGN_KM_POST",
+    "SGN_DELINEATOR",
+    "SGN_GUARDRAIL_W_BEAM",
+    "SGN_STOP",
+    "SGN_SPEED_50"
+  ]
+}

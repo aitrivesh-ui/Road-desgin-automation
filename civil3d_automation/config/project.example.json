@@ -7,27 +7,47 @@
     "checker": ""
   },
   "paths": {
-    "alignment_pi":        "csv/alignment_pi.csv",
-    "profile_pvis":        "csv/profile_pvis.csv",
-    "section_widths":      "csv/section_widths.csv",
-    "signage":             "csv/signage_schedule.csv",
-    "payitems":            "csv/payitems.csv",
-    "road_markings":       "csv/road_markings.csv",
-    "sections":            "csv/sections.csv",
-    "superelevation":      "csv/superelevation.csv",
-    "pavement_inputs":     "csv/pavement_inputs.csv",
-    "catchments":          "csv/catchments.csv",
-    "intersections":       "csv/intersections.csv",
-    "plan_sheets":         "csv/plan_sheets.csv",
-    "longsection_sheets":  "csv/longsection_sheets.csv",
-    "standard_details":    "csv/standard_details.csv",
-    "volumes_csv":         "out/volumes.csv",
-    "boq_csv":             "out/boq.csv",
-    "mass_haul_csv":       "out/mass_haul.csv",
-    "sections_list_csv":   "out/sections_list.csv",
-    "pavement_design_csv": "out/pavement_design.csv",
-    "drainage_design_csv": "out/drainage_design.csv",
-    "qa_log":              "out/qa/run_log.txt"
+    "alignment_pi":              "csv/alignment_pi.csv",
+    "profile_pvis":              "csv/profile_pvis.csv",
+    "section_widths":            "csv/section_widths.csv",
+    "signage":                   "csv/signage_schedule.csv",
+    "signage_generated":         "out/signage_generated.csv",
+    "payitems":                  "csv/payitems.csv",
+    "road_markings":             "csv/road_markings.csv",
+    "sections":                  "csv/sections.csv",
+    "superelevation":            "csv/superelevation.csv",
+    "pavement_inputs":           "csv/pavement_inputs.csv",
+    "catchments":                "csv/catchments.csv",
+    "intersections":             "csv/intersections.csv",
+    "plan_sheets":               "csv/plan_sheets.csv",
+    "longsection_sheets":        "csv/longsection_sheets.csv",
+    "standard_details":          "csv/standard_details.csv",
+    "markings_schedule":         "csv/markings_schedule.csv",
+    "volumes_csv":               "out/volumes.csv",
+    "boq_csv":                   "out/boq.csv",
+    "mass_haul_csv":             "out/mass_haul.csv",
+    "sections_list_csv":         "out/sections_list.csv",
+    "pavement_design_csv":       "out/pavement_design.csv",
+    "drainage_design_csv":       "out/drainage_design.csv",
+    "qa_log":                    "out/qa/run_log.txt",
+    "curve_table":               "out/curve_table.csv",
+    "alignment_meta":            "out/alignment_meta.json",
+    "pvi_table":                 "out/pvi_table.json",
+    "marking_quantities":        "out/marking_qty.csv",
+    "mass_haul_meta":            "out/mass_haul_meta.json",
+    "mass_haul_chart_svg":       "out/mass_haul_chart.svg",
+    "fill_depth_csv":            "out/fill_depth_by_station.csv",
+    "irc37_cache":               "out/irc37_layers.json",
+    "signage_counts":            "out/signage_counts.json",
+    "boq_abstract_csv":          "out/boq_abstract.csv",
+    "assembly_thickness_report": "out/assembly_thickness_report.csv",
+    "section_width_report":      "out/section_width_report.csv",
+    "dpr_sheet_manifest":        "out/dpr_sheet_manifest.json",
+    "dpr_pdf_dir":               "out/pdf"
+  },
+  "pipeline": {
+    "run_markings": true,
+    "fail_on_missing_artifact": true
   },
   "names": {
     "alignment":         "MAIN-CL",
@@ -38,10 +58,13 @@
     "surface_fg":        "FG",
     "sample_line_group": "SL-GROUP",
     "layers": {
-      "marking":  "C-ROAD-MARK",
-      "signage":  "C-SGN-FURN",
-      "super":    "C-SUPER",
-      "masshaul": "C-MASSHAUL"
+      "marking":       "C-ROAD-MARK",
+      "marking_thermo":"C-ROAD-MARK-THERMO",
+      "marking_paint": "C-ROAD-MARK-PAINT",
+      "signage":       "C-SGN-FURN",
+      "super":         "C-SUPER",
+      "masshaul":      "C-MASSHAUL",
+      "alignment":     "C-ROAD-ALIGN-HORZ"
     }
   },
   "styles": {
@@ -52,14 +75,76 @@
   },
   "design": {
     "start_station":          0.0,
+    "design_speed_kph":       80,
+    "superelevation_pct":     7.0,
+    "friction":               null,
+    "rate_change_c":          0.5,
     "max_grade_pct":          8.0,
-    "min_grade_pct":          0.3,
+    "min_grade_pct":          0.5,
     "plan_scale":          1000.0,
     "sheet_width_mm":       594.0,
     "sheet_height_mm":      420.0,
     "section_interval_m":    25.0,
     "section_left_width_m":  15.0,
     "section_right_width_m": 15.0,
-    "normal_crown_m":         0.03
+    "normal_crown_m":         0.03,
+    "irc66_enforce_k":        true,
+    "terrain":                "plain",
+    "kerbed_road":            true,
+    "strict_log":             false,
+    "soil_type":              "ordinary_soil",
+    "volume_sample_interval_m": 20,
+    "km_post_spacing_m":      500,
+    "road_class":             "nh_sh",
+    "paved_width_m":          7.0,
+    "signage": {
+      "auto_mode": true,
+      "merge_manual": true,
+      "default_offset_m": 4.5,
+      "guardrail_fill_threshold_m": 3,
+      "warning_advance_m": 60
+    },
+    "alignment": {
+      "geometry_mode": "polyline",
+      "scs_fallback": true
+    },
+    "irc38": {
+      "critical_radius_factor": 0.5
+    },
+    "irc37": {
+      "cbr_pct": 6,
+      "msa": 10,
+      "climate": "moderate",
+      "apply_to_assembly": false
+    }
+  },
+  "boq": {
+    "state_code": "HR",
+    "rate_file": "config/state_sor_rates.json",
+    "write_abstract_separate": false
+  },
+  "dpr": {
+    "package_id": "PKG-01",
+    "revision": "REV-A",
+    "pp_sheet_length_m": 500,
+    "xs_per_sheet": 20,
+    "drn_sheet_length_m": 2000,
+    "sgn_sheet_length_m": 2000,
+    "scales": {
+      "gen": 50000,
+      "pp_h": 2000,
+      "pp_v": 500,
+      "xs": 200,
+      "tcs": 100,
+      "drn": 2000,
+      "sgn": 2000
+    },
+    "title_block_name": "MORTH_A1",
+    "attribute_map": {
+      "drg_no": "DRG_NO",
+      "rev": "REV",
+      "ch_from": "CHAINAGE_FROM",
+      "ch_to": "CHAINAGE_TO"
+    }
   }
 }

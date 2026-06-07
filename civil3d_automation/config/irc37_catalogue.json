@@ -1,0 +1,56 @@
+{
+  "version": "IRC:37-2018-handbook-table1",
+  "meta": {
+    "standard": "IRC:37-2018",
+    "table": "Table 1 (abbreviated from ROADGEN handbook)",
+    "verified": false,
+    "notes": "Verify against official IRC:37-2018 PDF before bid use."
+  },
+  "climate_zones": ["moderate", "rainfall", "desert"],
+  "layers": ["GSB", "WMM", "DBM", "BC"],
+  "bins": {
+    "msa": [2, 5, 10, 20, 30, 50, 100, 150],
+    "cbr": [3, 5, 7, 8, 10]
+  },
+  "table": {
+    "2|3": {"GSB": 200, "WMM": 250, "DBM": 25, "BC": 25},
+    "2|5": {"GSB": 150, "WMM": 250, "DBM": 25, "BC": 25},
+    "2|8": {"GSB": 150, "WMM": 200, "DBM": 25, "BC": 25},
+    "5|3": {"GSB": 200, "WMM": 250, "DBM": 40, "BC": 40},
+    "5|5": {"GSB": 200, "WMM": 250, "DBM": 40, "BC": 40},
+    "10|3": {"GSB": 250, "WMM": 250, "DBM": 50, "BC": 40},
+    "10|5": {"GSB": 200, "WMM": 250, "DBM": 50, "BC": 40},
+    "10|8": {"GSB": 150, "WMM": 250, "DBM": 50, "BC": 40},
+    "20|3": {"GSB": 300, "WMM": 250, "DBM": 50, "BC": 40},
+    "20|5": {"GSB": 250, "WMM": 250, "DBM": 50, "BC": 40},
+    "30|3": {"GSB": 300, "WMM": 250, "DBM": 65, "BC": 40},
+    "30|5": {"GSB": 250, "WMM": 250, "DBM": 65, "BC": 40},
+    "30|8": {"GSB": 200, "WMM": 250, "DBM": 65, "BC": 40},
+    "50|3": {"GSB": 300, "WMM": 250, "DBM": 75, "BC": 40},
+    "50|5": {"GSB": 300, "WMM": 250, "DBM": 75, "BC": 40},
+    "100|3": {"GSB": 350, "WMM": 250, "DBM": 100, "BC": 50},
+    "100|5": {"GSB": 300, "WMM": 250, "DBM": 90, "BC": 50},
+    "150|3": {"GSB": 350, "WMM": 250, "DBM": 100, "BC": 50},
+    "150|5": {"GSB": 300, "WMM": 250, "DBM": 90, "BC": 50},
+    "150|8": {"GSB": 250, "WMM": 250, "DBM": 80, "BC": 50},
+    "150|10": {"GSB": 200, "WMM": 250, "DBM": 70, "BC": 50}
+  },
+  "entries": [
+    {
+      "cbr_min": 2,
+      "cbr_max": 4,
+      "msa_min": 0,
+      "msa_max": 10,
+      "climate": "rainfall",
+      "thickness_mm": {"GSB": 220, "WMM": 250, "DBM": 50, "BC": 40}
+    },
+    {
+      "cbr_min": 2,
+      "cbr_max": 4,
+      "msa_min": 0,
+      "msa_max": 10,
+      "climate": "desert",
+      "thickness_mm": {"GSB": 180, "WMM": 200, "DBM": 50, "BC": 40}
+    }
+  ]
+}

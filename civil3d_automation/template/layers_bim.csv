@@ -1,0 +1,8 @@
+layer_name,color_aci,linetype,description,used_by
+0,7,Continuous,ByBlock,
+C-ROAD-ALIGN-HORZ,3,Continuous,Horizontal alignment plan graphics,M1
+C-ROAD-MARK-THERMO,7,Continuous,Thermoplastic marking base (M0 adds suffix layers),M0
+C-ROAD-MARK-PAINT,7,Continuous,Paint marking base (optional),M0
+C-ROAD-MARK-COLD,7,Continuous,Cold plastic marking base (optional),M0
+C-SGN-FURN,2,Continuous,Signage and road furniture blocks,M5
+C-ROAD-CORRIDOR,8,Continuous,Corridor and assembly hatch (optional),M3-M4

@@ -113,6 +113,113 @@ class TestPreflightStrict(unittest.TestCase):
         lines = pv.validate_project(self.pj, strict=True)
         self.assertTrue(any("overlapping" in x.lower() for x in lines))
 
+    def test_plan01_extensions_ok(self) -> None:
+        with open(self.pj, "r", encoding="utf-8") as f:
+            cfg = json.load(f)
+        cfg["design"] = {
+            "irc37": {"cbr_pct": 6, "msa": 10, "climate": "moderate"},
+            "soil_type": "ordinary_soil",
+        }
+        cfg["boq"] = {"state_code": "HR"}
+        src = os.path.dirname(TOOLS)
+        shutil.copy(
+            os.path.join(src, "config", "state_sor_rates.json"),
+            os.path.join(self.root, "config", "state_sor_rates.json"),
+        )
+        shutil.copy(
+            os.path.join(src, "config", "irc37_catalogue.json"),
+            os.path.join(self.root, "config", "irc37_catalogue.json"),
+        )
+        with open(self.pj, "w", encoding="utf-8") as f:
+            json.dump(cfg, f)
+        lines = pv.validate_project(self.pj, strict=False)
+        self.assertTrue(any("irc37" in x.lower() for x in lines))
+        self.assertTrue(any("IRC:37 lookup" in x for x in lines))
+        self.assertTrue(any("state_code=HR" in x for x in lines))
+        self.assertFalse(pv.validation_failed(lines), lines)
+
+    def test_irc37_snap_warn(self) -> None:
+        with open(self.pj, "r", encoding="utf-8") as f:
+            cfg = json.load(f)
+        cfg["design"] = {"irc37": {"cbr_pct": 9.2, "msa": 70, "climate": "moderate"}}
+        src = os.path.dirname(TOOLS)
+        shutil.copy(
+            os.path.join(src, "config", "irc37_catalogue.json"),
+            os.path.join(self.root, "config", "irc37_catalogue.json"),
+        )
+        with open(self.pj, "w", encoding="utf-8") as f:
+            json.dump(cfg, f)
+        lines = pv.validate_project(self.pj, strict=False)
+        self.assertTrue(any("snapped" in x.lower() for x in lines))
+
+    def test_plan01_bad_state_code(self) -> None:
+        with open(self.pj, "r", encoding="utf-8") as f:
+            cfg = json.load(f)
+        cfg["boq"] = {"state_code": "XX"}
+        src = os.path.dirname(TOOLS)
+        os.makedirs(os.path.join(self.root, "config"), exist_ok=True)
+        shutil.copy(
+            os.path.join(src, "config", "state_sor_rates.json"),
+            os.path.join(self.root, "config", "state_sor_rates.json"),
+        )
+        with open(self.pj, "w", encoding="utf-8") as f:
+            json.dump(cfg, f)
+        lines = pv.validate_project(self.pj, strict=False)
+        self.assertTrue(any("state_code 'XX'" in x for x in lines))
+        self.assertTrue(pv.validation_failed(lines))
+
+    def test_pipeline_section_present(self) -> None:
+        with open(self.pj, 'r', encoding='utf-8') as f:
+            cfg = json.load(f)
+        cfg['pipeline'] = {'run_markings': True, 'steps': ['m1', 'm2']}
+        cfg['paths']['curve_table'] = 'out/curve_table.csv'
+        with open(self.pj, 'w', encoding='utf-8') as f:
+            json.dump(cfg, f)
+        lines = pv.validate_project(self.pj, strict=False)
+        self.assertTrue(any('Pipeline upstream artifacts' in x for x in lines))
+        self.assertTrue(any('Enabled steps' in x for x in lines))
+
+    def test_profile_exceeds_alignment_meta(self) -> None:
+        os.makedirs(os.path.join(self.root, 'out'), exist_ok=True)
+        meta = os.path.join(self.root, 'out', 'alignment_meta.json')
+        with open(meta, 'w', encoding='utf-8') as f:
+            json.dump({'total_length_m': 500.0}, f)
+        path = os.path.join(self.root, 'csv', 'profile_pvis.csv')
+        with open(path, 'w', encoding='utf-8-sig', newline='') as f:
+            w = csv.writer(f)
+            w.writerow(list(pv.CSV_PATH_KEYS['profile_pvis']))
+            w.writerow(['0', '100', '0', '0', '0'])
+            w.writerow(['600', '110', '0', '0', '0'])
+        with open(self.pj, 'r', encoding='utf-8') as f:
+            cfg = json.load(f)
+        cfg['paths']['alignment_meta'] = 'out/alignment_meta.json'
+        with open(self.pj, 'w', encoding='utf-8') as f:
+            json.dump(cfg, f)
+        lines = pv.validate_project(self.pj, strict=False)
+        self.assertTrue(any('exceeds alignment_meta' in x for x in lines))
+
+
+class TestHarvestXdata(unittest.TestCase):
+    def test_harvest_config_stub(self) -> None:
+        import harvest_xdata_quantities as hx  # noqa: E402
+
+        tmp = tempfile.mkdtemp(prefix="road_harvest_")
+        try:
+            root = os.path.join(tmp, "civil3d_automation")
+            os.makedirs(os.path.join(root, "config"))
+            pj = os.path.join(root, "config", "project.json")
+            with open(pj, "w", encoding="utf-8") as f:
+                json.dump(
+                    {"names": {"layers": {"marking": "C-ROAD-MARK-THERMO", "signage": "C-SGN-FURN"}}},
+                    f,
+                )
+            rows = hx.harvest_from_config(pj)
+            self.assertEqual(len(rows), 2)
+            out = os.path.join(root, "out", "xdata_quantities.csv")
+            self.assertTrue(os.path.isfile(out))
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
 
 class TestCloneJob(unittest.TestCase):
     def setUp(self) -> None:

@@ -1,8 +1,8 @@
 # Testing the Road Design Automation — M1 to M20
 
-**Web reference:** [road_automation_complete.html](../road_automation_complete.html) — same topics as a single-page HTML guide for offline browsers.
+**Web reference:** [road_automation_guide.html](../road_automation_guide.html) — same topics as a single-page HTML guide for offline browsers.
 
-This document covers validating inputs, running automated checks outside Civil 3D, testing the full M1–M20 pipeline, and verifying outputs.  For installation and Dynamo graph wiring, see [dynamo/README_BUILD_GRAPHS.md](dynamo/README_BUILD_GRAPHS.md).  On Windows, run **`install.bat`** at the repo root (or **`install_tools.bat`** in this folder) once to install Python 3 dependencies.
+This document covers validating inputs, running automated checks outside Civil 3D, testing the full M1–M20 pipeline, and verifying outputs.  For installation and Dynamo graph wiring, see the README.  On Windows, run **`install.bat`** at the repo root (or **`install_tools.bat`** in this folder) once to install Python 3 dependencies.
 
 ---
 
@@ -29,10 +29,10 @@ The launcher shows a checkbox list for all M1–M20, generates the Dynamo step-f
 
 | Requirement | Notes |
 |-------------|-------|
-| **Python 3.8+** on PATH | Separate from Civil 3D's IronPython 2 |
+| **Python 3.8+** on PATH | Separate from Civil 3D’s IronPython 2 |
 | **openpyxl** | `pip install -r requirements-tools.txt` (or run `install_tools.bat`) |
 | **Civil 3D 2022+** with Dynamo | For M1–M15 |
-| **Template DWG** | Layers, styles, assembly names, EG surface — see [template/README.md](template/README.md) |
+| **Template DWG** | Layers, styles, assembly names, EG surface matching `names.*` in `config/project.json` |
 
 ---
 
@@ -81,6 +81,14 @@ station_m,elevation_m,k_crest,k_sag,curve_length_m
 300,215.0,40,0,0
 700,213.0,0,35,0
 ```
+
+**M2 QA fixtures** (`csv/templates/` — use with `design_speed_kph: 80`):
+
+| File | Expected log codes (Python pre-validation / M2) |
+|------|--------------------------------------------------|
+| `profile_pvis_crest_short_vc.csv` | `IRC66_K_CREST` at summit PVI (L=80 m, K_actual &lt; 44) |
+| `profile_pvis_sag_drainage.csv` | `IRC73_DRAINAGE` (0.3% grade &lt; 0.5% min) |
+| `profile_pvis_ok.csv` | No IRC:66 K warnings |
 
 **`section_widths.csv`**
 ```csv
@@ -182,7 +190,7 @@ Or directly:
 python -m unittest discover -s tools -p "test_*.py" -v
 ```
 
-Covers preflight validation (including strict rules), `clone_new_job`, `design_check_outputs`, and workbook export.
+These tests cover preflight validation (including strict rules), `clone_new_job`, `design_check_outputs`, IRC:66 profile core (`test_irc66_profile.py`), M0 marking catalogue/qty contract (`test_m0_marking_qty.py`), and workbook export when `csv/templates/RoadAutomation_DataStarter.xlsx` is present.
 
 ---
 

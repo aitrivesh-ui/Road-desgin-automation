@@ -1,1 +1,4 @@
-Save Dynamo graphs here after building them in Civil 3D (see README_BUILD_GRAPHS.md). Suggested filenames: M1_Alignment.dyn, M2_Profile.dyn, …, M8_RunAll.dyn.
+Save Dynamo Player graphs (.dyn) in this folder.
+Use IronPython 2 on each Python Script node.
+Wire m8_run_all.py with IN[0] = absolute path to config/project.json.
+See ../testing_guide.html#phase3 for setup steps.

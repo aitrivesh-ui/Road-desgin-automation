@@ -1,1 +1,6 @@
-source,key,pay_item,description,unit
+source,key,pay_item,description,unit,qty_source,morh_chapter,rate_key
+volumes,cut_haul_m3,2.04,Earthwork cut haul (swell corrected),m3,volumes.cut_haul_m3,2.04,volumes|cut_haul_m3
+volumes,fill_borrow_m3,2.05,Earthwork fill borrow (shrink corrected),m3,volumes.fill_borrow_m3,2.05,volumes|fill_borrow_m3
+marking,M1,5.01,Centre line dashed M1,m,marking.M1,5.01,marking|M1
+pavement,gsb,3.01,Granular sub-base GSB,m3,pavement.gsb,3.01,pavement|gsb
+signage,SGN_STOP,6.01,Stop sign 600mm,each,signage.SGN_STOP,6.01,signage|SGN_STOP

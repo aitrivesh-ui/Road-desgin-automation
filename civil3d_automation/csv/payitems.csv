@@ -1,8 +1,21 @@
-source,key,pay_item,description,unit
-volumes,cut_m3,2.01,Earthwork cut (volume surface),m3
-volumes,fill_m3,2.02,Earthwork fill (volume surface),m3
-volumes,net_m3,2.03,Earthwork net (volume surface),m3
-marking,M1,5.01,Centre line dashed M1,m
-marking,M2,5.02,Barrier line M2,m
-signage,SGN_STOP,6.01,Stop sign 600mm,each
-signage,SGN_SPEED_50,6.02,Speed limit 50 sign,each
+source,key,pay_item,description,unit,qty_source,morh_chapter,rate_key
+volumes,cut_haul_m3,2.04,Earthwork cut haul (swell corrected),m3,volumes.cut_haul_m3,2.04,volumes|cut_haul_m3
+volumes,fill_borrow_m3,2.05,Earthwork fill borrow (shrink corrected),m3,volumes.fill_borrow_m3,2.05,volumes|fill_borrow_m3
+volumes,borrow_req_m3,2.06,Borrow requirement,m3,volumes.borrow_req_m3,2.06,volumes|borrow_req_m3
+volumes,spoil_m3,2.07,Spoil disposal,m3,volumes.spoil_m3,2.07,volumes|spoil_m3
+volumes,cut_m3,2.01,Earthwork cut (volume surface),m3,volumes.cut_m3,2.01,volumes|cut_m3
+volumes,fill_m3,2.02,Earthwork fill (volume surface),m3,volumes.fill_m3,2.02,volumes|fill_m3
+marking,M1,5.01,Centre line dashed M1,m,marking.M1,5.01,marking|M1
+marking,M2,5.02,Barrier line M2,m,marking.M2,5.02,marking|M2
+marking,CL-D,5.03,Centre line dashed thermoplastic,m2,marking.CL-D,5.03,marking|CL-D
+pavement,gsb,3.01,Granular sub-base GSB,m3,pavement.gsb,3.01,pavement|gsb
+pavement,wmm,3.02,Wet mix macadam WMM,m3,pavement.wmm,3.02,pavement|wmm
+pavement,dbm,3.03,Dense bituminous macadam DBM,m3,pavement.dbm,3.03,pavement|dbm
+pavement,bc,3.04,Bituminous concrete BC,m3,pavement.bc,3.04,pavement|bc
+signage,SGN_STOP,6.01,Stop sign 600mm,each,signage.SGN_STOP,6.01,signage|SGN_STOP
+signage,SGN_SPEED_50,6.02,Speed limit 50 sign,each,signage.SGN_SPEED_50,6.02,signage|SGN_SPEED_50
+signage,SGN_W1,6.03,Warning sign W-1 curve,each,signage.SGN_W1,6.03,signage|SGN_W1
+signage,SGN_W2,6.04,Warning sign W-2 sharp curve,each,signage.SGN_W2,6.04,signage|SGN_W2
+signage,SGN_KM_POST,6.05,Kilometre post,each,signage.SGN_KM_POST,6.05,signage|SGN_KM_POST
+signage,SGN_DELINEATOR,6.06,Road delineator IRC SP 52,each,signage.SGN_DELINEATOR,6.06,signage|SGN_DELINEATOR
+signage,SGN_GUARDRAIL,6.07,W-beam guardrail IRC SP 73,m,signage.SGN_GUARDRAIL,6.07,signage|SGN_GUARDRAIL

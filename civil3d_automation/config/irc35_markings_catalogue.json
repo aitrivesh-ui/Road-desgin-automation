@@ -1,0 +1,115 @@
+{
+  "standard": "IRC:35-2015",
+  "morth_section": "803",
+  "mat_layer": {
+    "thermoplastic": "C-ROAD-MARK-THERMO",
+    "paint": "C-ROAD-MARK-PAINT",
+    "cold_plastic": "C-ROAD-MARK-COLD"
+  },
+  "valid_materials": ["thermoplastic", "paint", "cold_plastic"],
+  "mark_types": {
+    "CL-D": {
+      "dash_m": 3.0,
+      "gap_m": 5.0,
+      "width_m": 0.1,
+      "thick_m": 0.006,
+      "color_idx": 7,
+      "layer_suffix": "CL-DASH"
+    },
+    "CL-S": {
+      "dash_m": 0,
+      "gap_m": 0,
+      "width_m": 0.1,
+      "thick_m": 0.006,
+      "color_idx": 7,
+      "layer_suffix": "CL-SOLID"
+    },
+    "CL-DY": {
+      "dash_m": 0,
+      "gap_m": 0,
+      "width_m": 0.1,
+      "thick_m": 0.006,
+      "color_idx": 2,
+      "layer_suffix": "CL-DBL-YLW"
+    },
+    "LL-D": {
+      "dash_m": 3.0,
+      "gap_m": 9.0,
+      "width_m": 0.1,
+      "thick_m": 0.006,
+      "color_idx": 7,
+      "layer_suffix": "LL-DASH"
+    },
+    "LL-SD": {
+      "dash_m": 1.0,
+      "gap_m": 1.0,
+      "width_m": 0.1,
+      "thick_m": 0.006,
+      "color_idx": 7,
+      "layer_suffix": "LL-SHORT"
+    },
+    "EL-S": {
+      "dash_m": 0,
+      "gap_m": 0,
+      "width_m": 0.15,
+      "thick_m": 0.006,
+      "color_idx": 7,
+      "layer_suffix": "EL-WHITE"
+    },
+    "EL-Y": {
+      "dash_m": 0,
+      "gap_m": 0,
+      "width_m": 0.15,
+      "thick_m": 0.006,
+      "color_idx": 2,
+      "layer_suffix": "EL-YELLOW"
+    },
+    "SL": {
+      "dash_m": 0,
+      "gap_m": 0,
+      "width_m": 0.3,
+      "thick_m": 0.006,
+      "color_idx": 7,
+      "layer_suffix": "STOP-LINE"
+    },
+    "GW": {
+      "dash_m": 0.6,
+      "gap_m": 0.6,
+      "width_m": 0.3,
+      "thick_m": 0.006,
+      "color_idx": 7,
+      "layer_suffix": "GIVE-WAY"
+    },
+    "ZC": {
+      "dash_m": 0,
+      "gap_m": 0,
+      "width_m": 0.4,
+      "thick_m": 0.006,
+      "color_idx": 7,
+      "layer_suffix": "ZEBRA"
+    },
+    "WL": {
+      "dash_m": 1.0,
+      "gap_m": 1.0,
+      "width_m": 0.1,
+      "thick_m": 0.006,
+      "color_idx": 7,
+      "layer_suffix": "WARN-LINE"
+    },
+    "BL": {
+      "dash_m": 0,
+      "gap_m": 0,
+      "width_m": 0.15,
+      "thick_m": 0.006,
+      "color_idx": 2,
+      "layer_suffix": "BUS-STOP"
+    }
+  },
+  "osd_kph": {
+    "100": 470,
+    "80": 370,
+    "60": 270,
+    "50": 235
+  },
+  "nopass_buffer_m": 60
+}

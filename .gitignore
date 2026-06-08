@@ -19,3 +19,7 @@ Thumbs.db
 
 # Claude Code internal state
 .claude/
+
+# PyInstaller build artifacts
+build/
+dist/

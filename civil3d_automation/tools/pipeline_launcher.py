@@ -51,16 +51,18 @@ MODULES = [
     ("m18", "M18 Intersection design",       "Turning lane geometry + kerb returns (intersections.csv)",     "python3"),
     ("m19", "M19 Report generator",          "Multi-sheet Excel design report with charts (openpyxl)",       "python3"),
     ("m20", "M20 Design verifier",           "Cross-checks all outputs: OK / WARN / ERROR report",           "python3"),
-    ("m21", "M21 Curve schedule",            "Validates clothoid A, K-values, SSD — curve_schedule.csv",     "python3"),
+    ("m21",     "M21 Curve schedule",    "Validates clothoid A, K-values, SSD — curve_schedule.csv",            "python3"),
+    ("alignqc", "Align QC",             "PI quality check — offsets, duplicates, bad spirals",                 "python3"),
 ]
 
 TOOL_SCRIPTS = {
-    "m16": os.path.join(ROOT, "tools", "pavement_design.py"),
-    "m17": os.path.join(ROOT, "tools", "drainage_design.py"),
-    "m18": os.path.join(ROOT, "tools", "intersection_design.py"),
-    "m19": os.path.join(ROOT, "tools", "report_generator.py"),
-    "m20": os.path.join(ROOT, "tools", "design_verifier.py"),
-    "m21": os.path.join(ROOT, "tools", "m21_curve_schedule.py"),
+    "m16":     os.path.join(ROOT, "tools", "pavement_design.py"),
+    "m17":     os.path.join(ROOT, "tools", "drainage_design.py"),
+    "m18":     os.path.join(ROOT, "tools", "intersection_design.py"),
+    "m19":     os.path.join(ROOT, "tools", "report_generator.py"),
+    "m20":     os.path.join(ROOT, "tools", "design_verifier.py"),
+    "m21":     os.path.join(ROOT, "tools", "m21_curve_schedule.py"),
+    "alignqc": os.path.join(ROOT, "tools", "alignment_qc.py"),
 }
 
 # ---------------------------------------------------------------------------
@@ -109,6 +111,28 @@ def _run_tool(step_id: str, project_json: str, log_widget) -> None:
             _align = os.path.join(ROOT, "csv", "alignment_pi.csv")
             _prof  = os.path.join(ROOT, "csv", "profile_pvis.csv")
         cmd += ["--cli", _align, _prof]
+    elif step_id == "alignqc":
+        import json as _json
+        try:
+            with open(project_json, "r", encoding="utf-8") as _f:
+                _cfg = _json.load(_f)
+            _paths  = _cfg.get("paths", {})
+            _design = _cfg.get("design", {})
+            _base   = os.path.normpath(os.path.join(os.path.dirname(project_json), ".."))
+            _align  = os.path.join(_base, _paths.get("alignment_pi",       "csv/alignment_pi.csv"))
+            _out_csv = os.path.join(_base, _paths.get("alignment_pi_clean", "out/alignment_pi_qc.csv"))
+            _report  = os.path.join(_base, _paths.get("alignment_qc_report","out/alignment_qc_report.txt"))
+            _tol     = str(_design.get("centreline_tolerance_m", 2.0))
+            _spc     = str(_design.get("min_pi_spacing_m", 5.0))
+            _tan     = str(_design.get("min_tangent_length_m", 20.0))
+        except Exception:
+            _align   = os.path.join(ROOT, "csv", "alignment_pi.csv")
+            _out_csv = os.path.join(ROOT, "out", "alignment_pi_qc.csv")
+            _report  = os.path.join(ROOT, "out", "alignment_qc_report.txt")
+            _tol, _spc, _tan = "2.0", "5.0", "20.0"
+        cmd += ["--cli", _align,
+                "--tolerance", _tol, "--min-spacing", _spc, "--min-tangent", _tan,
+                "--out-csv", _out_csv, "--out-report", _report]
 
     _log(log_widget, f"\n▶  Running {step_id.upper()} — {script}\n", ACCENT)
     try:

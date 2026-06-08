@@ -77,6 +77,7 @@ def run(project_json, step_filter):
                 styles.get('alignment', 'Standard'),
                 styles.get('alignment_label', 'Standard'),
                 float(design.get('start_station', 0.0)),
+                project_json,
             ],
             g_extra,
         )

@@ -422,12 +422,13 @@ class HomePanel(ttk.Frame):
 
         self._rows = {}
         modules = [
-            ("M16", "Pavement Design",       BLUE,     "out/pavement_design.csv"),
-            ("M17", "Drainage Design",        BLUE,     "out/drainage_design.csv"),
-            ("M18", "Intersection Design",    BLUE,     "out/intersection_geometry.csv"),
-            ("M19", "Report Generator",       "#1c6f44","out/report/design_report.xlsx"),
-            ("M20", "Design Verifier",        "#1c6f44","out/design_verification.txt"),
-            ("M21", "Curve Schedule",         PURPLE,   "out/curve_schedule.csv"),
+            ("M16",  "Pavement Design",       BLUE,     "out/pavement_design.csv"),
+            ("M17",  "Drainage Design",        BLUE,     "out/drainage_design.csv"),
+            ("M18",  "Intersection Design",    BLUE,     "out/intersection_geometry.csv"),
+            ("M19",  "Report Generator",       "#1c6f44","out/report/design_report.xlsx"),
+            ("M20",  "Design Verifier",        "#1c6f44","out/design_verification.txt"),
+            ("M21",  "Curve Schedule",         PURPLE,   "out/curve_schedule.csv"),
+            ("AQCL", "Alignment QC",           ORANGE,   "out/alignment_qc_report.txt"),
         ]
 
         for i, (mod, name, colour, outrel) in enumerate(modules):
@@ -467,7 +468,7 @@ class HomePanel(ttk.Frame):
                     panel._cfg_var.set(p)
 
     def _goto(self, mod: str):
-        tab_names = {"M16": 1, "M17": 2, "M18": 3, "M19": 4, "M20": 5, "M21": 6}
+        tab_names = {"M16": 1, "M17": 2, "M18": 3, "M19": 4, "M20": 5, "M21": 6, "AQCL": 7}
         idx = tab_names.get(mod)
         if idx is not None:
             self._notebook.select(idx)
@@ -545,6 +546,99 @@ class CurveSchedulePanel(ToolPanel):
                "--cli", self._align_var.get(), self._profile_var.get(),
                "--out-csv",    self._csv_var.get(),
                "--out-report", self._report_var.get()]
+        self._run_cmd(cmd)
+
+
+# ---------------------------------------------------------------------------
+# Alignment QC tool
+# ---------------------------------------------------------------------------
+ORANGE = "#e05c00"
+
+class AlignmentQCPanel(ToolPanel):
+    def __init__(self, parent):
+        super().__init__(parent, "AQCL", "Alignment QC — offset outliers, duplicates, spirals", ORANGE)
+        self._csv_var     = tk.StringVar(value=os.path.join(ROOT, "csv", "alignment_pi.csv"))
+        self._out_csv_var = tk.StringVar(value=os.path.join(ROOT, "out", "alignment_pi_qc.csv"))
+        self._report_var  = tk.StringVar(value=os.path.join(ROOT, "out", "alignment_qc_report.txt"))
+        self._tol_var     = tk.StringVar(value="2.0")
+        self._spacing_var = tk.StringVar(value="5.0")
+        self._tangent_var = tk.StringVar(value="20.0")
+        self._deflect_var = tk.StringVar(value="160.0")
+        self._remove_var  = tk.BooleanVar(value=False)
+        self._build_form()
+
+    def _build_form(self):
+        body = tk.Frame(self, bg=BG_PANEL)
+        body.pack(fill="x", pady=(6, 0))
+
+        self._row(body, "alignment_pi.csv", self._csv_var,     lambda: self._pick(self._csv_var))
+        self._row(body, "Output QC CSV",    self._out_csv_var, lambda: self._save(self._out_csv_var, ".csv"))
+        self._row(body, "Output report",    self._report_var,  lambda: self._save(self._report_var, ".txt"))
+
+        # parameter row
+        params = tk.Frame(body, bg=BG_PANEL)
+        params.pack(fill="x", padx=14, pady=(4, 2))
+
+        def _param(label, var, width=7):
+            tk.Label(params, text=label, bg=BG_PANEL, fg=FG_DIM,
+                     font=("Segoe UI", 9)).pack(side="left", padx=(0, 2))
+            ttk.Entry(params, textvariable=var, width=width,
+                      style="Path.TEntry").pack(side="left", padx=(0, 12))
+
+        _param("Centreline tol (m)",    self._tol_var)
+        _param("Min spacing (m)",       self._spacing_var)
+        _param("Min tangent (m)",       self._tangent_var)
+        _param("Max deflection (deg)",  self._deflect_var)
+
+        opt_row = tk.Frame(body, bg=BG_PANEL)
+        opt_row.pack(fill="x", padx=14, pady=(2, 4))
+        ttk.Checkbutton(opt_row,
+                        text="Auto-remove DUPLICATE and COORD_OUTLIER rows from output CSV",
+                        variable=self._remove_var,
+                        style="Dark.TCheckbutton").pack(side="left")
+
+        info = tk.Frame(body, bg=BG_PANEL)
+        info.pack(fill="x", padx=14, pady=(0, 4))
+        tk.Label(info,
+                 text="Checks: near-duplicate PIs · perpendicular chord offset · deflection "
+                      "anomalies · impossible spiral geometry · short tangent between curves",
+                 bg=BG_PANEL, fg=FG_DIM, font=("Segoe UI", 8),
+                 anchor="w", wraplength=640, justify="left").pack(fill="x")
+
+        btn_row = tk.Frame(body, bg=BG_PANEL)
+        btn_row.pack(fill="x", padx=14, pady=(6, 4))
+        self._run_btn = ttk.Button(btn_row, text="▶  Run QC", command=self._run,
+                                   style="Run.TButton", width=14)
+        self._run_btn.pack(side="left", padx=(0, 8))
+        ttk.Button(btn_row, text="📂  Open CSV",    width=14,
+                   command=lambda: _open_path(self._out_csv_var.get())).pack(side="left", padx=(0, 4))
+        ttk.Button(btn_row, text="📂  Open report", width=14,
+                   command=lambda: _open_path(self._report_var.get())).pack(side="left")
+        ttk.Button(btn_row, text="🗑  Clear log", command=self._clear_log,
+                   width=12).pack(side="right")
+
+        self._build_log(self).pack(fill="both", expand=True, padx=14, pady=(4, 14))
+
+    def _pick(self, var):
+        p = filedialog.askopenfilename(filetypes=[("CSV", "*.csv"), ("All", "*.*")])
+        if p: var.set(p)
+
+    def _save(self, var, ext):
+        ft = [("CSV", "*.csv")] if ext == ".csv" else [("Text", "*.txt")]
+        p = filedialog.asksaveasfilename(defaultextension=ext, filetypes=ft)
+        if p: var.set(p)
+
+    def _run(self):
+        cmd = [sys.executable, os.path.join(TOOLS_DIR, "alignment_qc.py"),
+               "--cli", self._csv_var.get(),
+               "--tolerance",      self._tol_var.get(),
+               "--min-spacing",    self._spacing_var.get(),
+               "--min-tangent",    self._tangent_var.get(),
+               "--max-deflection", self._deflect_var.get(),
+               "--out-csv",        self._out_csv_var.get(),
+               "--out-report",     self._report_var.get()]
+        if self._remove_var.get():
+            cmd.append("--auto-remove")
         self._run_cmd(cmd)
 
 
@@ -643,23 +737,25 @@ class Dashboard(tk.Tk):
 
         # Instantiate tool panels
         panels = {
-            "M16": PavementPanel(nb),
-            "M17": DrainagePanel(nb),
-            "M18": IntersectionPanel(nb),
-            "M19": ReportPanel(nb),
-            "M20": VerifierPanel(nb),
-            "M21": CurveSchedulePanel(nb),
+            "M16":  PavementPanel(nb),
+            "M17":  DrainagePanel(nb),
+            "M18":  IntersectionPanel(nb),
+            "M19":  ReportPanel(nb),
+            "M20":  VerifierPanel(nb),
+            "M21":  CurveSchedulePanel(nb),
+            "AQCL": AlignmentQCPanel(nb),
         }
 
         home = HomePanel(nb, nb, panels, self._cfg_var)
 
-        nb.add(home,             text="  Home  ")
-        nb.add(panels["M16"],    text="  M16 Pavement  ")
-        nb.add(panels["M17"],    text="  M17 Drainage  ")
-        nb.add(panels["M18"],    text="  M18 Intersections  ")
-        nb.add(panels["M19"],    text="  M19 Report  ")
-        nb.add(panels["M20"],    text="  M20 Verify  ")
-        nb.add(panels["M21"],    text="  M21 Curves  ")
+        nb.add(home,              text="  Home  ")
+        nb.add(panels["M16"],     text="  M16 Pavement  ")
+        nb.add(panels["M17"],     text="  M17 Drainage  ")
+        nb.add(panels["M18"],     text="  M18 Intersections  ")
+        nb.add(panels["M19"],     text="  M19 Report  ")
+        nb.add(panels["M20"],     text="  M20 Verify  ")
+        nb.add(panels["M21"],     text="  M21 Curves  ")
+        nb.add(panels["AQCL"],    text="  Align QC  ")
         nb.add(PreflightPanel(nb),  text="  Preflight  ")
         nb.add(WorkbookPanel(nb),   text="  Workbook  ")
 
@@ -668,7 +764,7 @@ class Dashboard(tk.Tk):
         bar.pack(fill="x", side="bottom")
         tk.Label(bar, textvariable=self._cfg_var, bg=BG_MID, fg=FG_DIM,
                  font=("Segoe UI", 8), anchor="w", padx=10).pack(side="left")
-        tk.Label(bar, text="Road Design Automation • M16–M21 Python Tools",
+        tk.Label(bar, text="Road Design Automation • M16–M21 + Align QC Python Tools",
                  bg=BG_MID, fg=FG_DIM, font=("Segoe UI", 8), padx=10).pack(side="right")
 
     def _apply_styles(self):

@@ -29,6 +29,8 @@
     "drainage_design_csv":  "out/drainage_design.csv",
     "curve_schedule_csv":   "out/curve_schedule.csv",
     "curve_schedule_report":"out/curve_schedule_report.txt",
+    "alignment_pi_clean":   "out/alignment_pi_qc.csv",
+    "alignment_qc_report":  "out/alignment_qc_report.txt",
     "qa_log":               "out/qa/run_log.txt"
   },
   "names": {
@@ -67,6 +69,9 @@
     "station_range_start":   null,
     "station_range_end":     null,
     "max_sheets_plan":       null,
-    "max_sheets_longsection":null
+    "max_sheets_longsection":null,
+    "centreline_tolerance_m": 2.0,
+    "min_pi_spacing_m":       5.0,
+    "min_tangent_length_m":   20.0
   }
 }

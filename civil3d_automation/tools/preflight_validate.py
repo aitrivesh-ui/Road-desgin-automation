@@ -123,6 +123,39 @@ def _strict_data_checks(root: str, paths: dict) -> list[str]:
                 )
             else:
                 out.append("OK: Strict — alignment has %d PI row(s)." % len(pis))
+                # duplicate spacing check (no external imports needed)
+                import math as _math
+                MIN_SPACING = 5.0
+                CENTRELINE_TOL = 2.0
+                coords = []
+                for r in pis:
+                    try:
+                        coords.append((float(r["easting"]), float(r["northing"])))
+                    except (KeyError, ValueError):
+                        pass
+                for i in range(1, len(coords)):
+                    dx = coords[i][0] - coords[i - 1][0]
+                    dy = coords[i][1] - coords[i - 1][1]
+                    d = _math.sqrt(dx * dx + dy * dy)
+                    if d < MIN_SPACING:
+                        out.append(
+                            "WARN: Strict — PI rows %d and %d are %.1f m apart (< %.1f m min spacing)."
+                            % (i - 1, i, d, MIN_SPACING)
+                        )
+                # perpendicular chord offset check
+                for i in range(1, len(coords) - 1):
+                    ax, ay = coords[i - 1]
+                    bx, by = coords[i + 1]
+                    px, py = coords[i]
+                    chord = _math.sqrt((bx - ax) ** 2 + (by - ay) ** 2)
+                    if chord > 1e-9:
+                        offset = abs((bx - ax) * (ay - py) - (ax - px) * (by - ay)) / chord
+                        if offset > CENTRELINE_TOL:
+                            out.append(
+                                "WARN: Strict — PI row %d has perpendicular offset %.1f m from chord "
+                                "(tol %.1f m) — possible misaligned survey point."
+                                % (i, offset, CENTRELINE_TOL)
+                            )
 
     rel = paths.get("profile_pvis")
     if rel:

@@ -25,9 +25,11 @@
     "boq_csv":             "out/boq.csv",
     "mass_haul_csv":       "out/mass_haul.csv",
     "sections_list_csv":   "out/sections_list.csv",
-    "pavement_design_csv": "out/pavement_design.csv",
-    "drainage_design_csv": "out/drainage_design.csv",
-    "qa_log":              "out/qa/run_log.txt"
+    "pavement_design_csv":  "out/pavement_design.csv",
+    "drainage_design_csv":  "out/drainage_design.csv",
+    "curve_schedule_csv":   "out/curve_schedule.csv",
+    "curve_schedule_report":"out/curve_schedule_report.txt",
+    "qa_log":               "out/qa/run_log.txt"
   },
   "names": {
     "alignment":         "MAIN-CL",
@@ -60,6 +62,11 @@
     "section_interval_m":    25.0,
     "section_left_width_m":  15.0,
     "section_right_width_m": 15.0,
-    "normal_crown_m":         0.03
+    "normal_crown_m":         0.03,
+    "design_speed_kph":      80.0,
+    "station_range_start":   null,
+    "station_range_end":     null,
+    "max_sheets_plan":       null,
+    "max_sheets_longsection":null
   }
 }

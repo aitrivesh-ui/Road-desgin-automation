@@ -51,6 +51,7 @@ MODULES = [
     ("m18", "M18 Intersection design",       "Turning lane geometry + kerb returns (intersections.csv)",     "python3"),
     ("m19", "M19 Report generator",          "Multi-sheet Excel design report with charts (openpyxl)",       "python3"),
     ("m20", "M20 Design verifier",           "Cross-checks all outputs: OK / WARN / ERROR report",           "python3"),
+    ("m21", "M21 Curve schedule",            "Validates clothoid A, K-values, SSD — curve_schedule.csv",     "python3"),
 ]
 
 TOOL_SCRIPTS = {
@@ -59,6 +60,7 @@ TOOL_SCRIPTS = {
     "m18": os.path.join(ROOT, "tools", "intersection_design.py"),
     "m19": os.path.join(ROOT, "tools", "report_generator.py"),
     "m20": os.path.join(ROOT, "tools", "design_verifier.py"),
+    "m21": os.path.join(ROOT, "tools", "m21_curve_schedule.py"),
 }
 
 # ---------------------------------------------------------------------------
@@ -92,10 +94,21 @@ def _run_tool(step_id: str, project_json: str, log_widget) -> None:
         return
 
     cmd = [sys.executable, script]
-    if step_id == "m19":
+    if step_id in ("m19", "m20"):
         cmd.append(project_json)
-    elif step_id == "m20":
-        cmd.append(project_json)
+    elif step_id == "m21":
+        import json as _json
+        try:
+            with open(project_json, "r", encoding="utf-8") as _f:
+                _cfg = _json.load(_f)
+            _paths = _cfg.get("paths", {})
+            _base  = os.path.normpath(os.path.join(os.path.dirname(project_json), ".."))
+            _align = os.path.join(_base, _paths.get("alignment_pi",  "csv/alignment_pi.csv"))
+            _prof  = os.path.join(_base, _paths.get("profile_pvis",  "csv/profile_pvis.csv"))
+        except Exception:
+            _align = os.path.join(ROOT, "csv", "alignment_pi.csv")
+            _prof  = os.path.join(ROOT, "csv", "profile_pvis.csv")
+        cmd += ["--cli", _align, _prof]
 
     _log(log_widget, f"\n▶  Running {step_id.upper()} — {script}\n", ACCENT)
     try:
@@ -252,6 +265,88 @@ def run_gui() -> None:
                command=lambda: [_all(False), _group("dynamo",  True)]).pack(side=tk.LEFT, padx=(0, 4))
     ttk.Button(btn_row, text="Python tools only", style="Dark.TButton",
                command=lambda: [_all(False), _group("python3", True)]).pack(side=tk.LEFT)
+
+    # ---- Sheet Options (collapsible) -----------------------------------
+    _sheet_expanded = tk.BooleanVar(value=False)
+    _sheet_lf_ref: list = []
+
+    def _toggle_sheet_options():
+        if _sheet_expanded.get():
+            _sheet_expanded.set(False)
+            toggle_btn.configure(text="▶  Sheet Options (station range / sheet cap)")
+            if _sheet_lf_ref:
+                _sheet_lf_ref[0].pack_forget()
+        else:
+            _sheet_expanded.set(True)
+            toggle_btn.configure(text="▼  Sheet Options (station range / sheet cap)")
+            if _sheet_lf_ref:
+                _sheet_lf_ref[0].pack(fill=tk.X, pady=(4, 0))
+
+    toggle_btn = ttk.Button(t1, text="▶  Sheet Options (station range / sheet cap)",
+                            style="Dark.TButton", command=_toggle_sheet_options)
+    toggle_btn.pack(anchor="w", pady=(6, 0))
+
+    sheet_lf = tk.LabelFrame(t1, text="  Sheet Options  ",
+                             bg=BG_LIGHT, font=("Segoe UI", 9, "bold"),
+                             relief="groove", bd=1)
+    _sheet_lf_ref.append(sheet_lf)
+
+    _sta_start_var  = tk.StringVar(value="")
+    _sta_end_var    = tk.StringVar(value="")
+    _max_plan_var   = tk.StringVar(value="")
+    _max_ls_var     = tk.StringVar(value="")
+
+    def _sopt_row(parent, label, var, hint):
+        row = ttk.Frame(parent)
+        row.pack(fill=tk.X, padx=8, pady=3)
+        ttk.Label(row, text=label, width=22, anchor="w").pack(side=tk.LEFT)
+        ttk.Entry(row, textvariable=var, width=14).pack(side=tk.LEFT, padx=(0, 6))
+        ttk.Label(row, text=hint, foreground="#777777", font=("Segoe UI", 8)).pack(side=tk.LEFT)
+
+    _sopt_row(sheet_lf, "Start station (m):",       _sta_start_var, "override alignment start  (blank = use full alignment)")
+    _sopt_row(sheet_lf, "End station (m):",          _sta_end_var,   "override alignment end    (blank = use full alignment)")
+    _sopt_row(sheet_lf, "Max plan sheets:",           _max_plan_var,  "cap number of M13 plan layouts created  (blank = no cap)")
+    _sopt_row(sheet_lf, "Max long-section sheets:",   _max_ls_var,    "cap number of M14 long-section layouts  (blank = no cap)")
+
+    def _write_sheet_opts():
+        import json as _json
+        pj = proj_var.get()
+        if not os.path.isfile(pj):
+            return
+        try:
+            with open(pj, "r", encoding="utf-8") as _f:
+                _cfg = _json.load(_f)
+        except Exception:
+            return
+        design = _cfg.setdefault("design", {})
+
+        def _set_or_null(key, sv):
+            val = sv.get().strip()
+            design[key] = float(val) if val else None
+
+        _set_or_null("station_range_start",   _sta_start_var)
+        _set_or_null("station_range_end",      _sta_end_var)
+        _set_or_null("max_sheets_plan",        _max_plan_var)
+        _set_or_null("max_sheets_longsection", _max_ls_var)
+
+        with open(pj, "w", encoding="utf-8") as _f:
+            _json.dump(_cfg, _f, indent=2)
+        apply_btn.configure(text="Written ✓")
+        sheet_lf.after(1800, lambda: apply_btn.configure(text="Write to project.json"))
+
+    def _clear_sheet_opts():
+        for v in (_sta_start_var, _sta_end_var, _max_plan_var, _max_ls_var):
+            v.set("")
+
+    so_btn_row = ttk.Frame(sheet_lf)
+    so_btn_row.pack(fill=tk.X, padx=8, pady=(4, 6))
+    apply_btn = ttk.Button(so_btn_row, text="Write to project.json",
+                           style="Blue.TButton", command=_write_sheet_opts)
+    apply_btn.pack(side=tk.LEFT, padx=(0, 8))
+    ttk.Button(so_btn_row, text="Clear", style="Dark.TButton",
+               command=_clear_sheet_opts).pack(side=tk.LEFT)
+    ttk.Label(so_btn_row, text="Writes values directly into the project.json design section.",
+              foreground="#666666", font=("Segoe UI", 8)).pack(side=tk.LEFT, padx=(12, 0))
 
     # ====================================================================
     # TAB 2 — Dynamo step filter (M1-M15)

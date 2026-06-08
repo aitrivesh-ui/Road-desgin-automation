@@ -299,6 +299,50 @@ def _mass_haul_sheet(wb: Workbook, rows: List[dict]) -> None:
             pass
 
 
+def _curves_sheet(wb: Workbook, csv_path: str) -> None:
+    ws = wb.create_sheet("Curves")
+    ws["A1"] = "Curve Schedule (M21)"
+    ws["A1"].font = Font(name="Calibri", size=12, bold=True)
+
+    if not os.path.isfile(csv_path):
+        ws["A3"] = f"curve_schedule.csv not found: {csv_path}"
+        ws["A4"] = "Run:  python tools/m21_curve_schedule.py --cli csv/alignment_pi.csv csv/profile_pvis.csv"
+        return
+
+    _STATUS_FILL = {
+        "OK":    PatternFill("solid", fgColor="d4edda"),
+        "WARN":  PatternFill("solid", fgColor="fff3cd"),
+        "ERROR": PatternFill("solid", fgColor="f8d7da"),
+    }
+
+    row_num = 3
+    section = None
+    with open(csv_path, "r", encoding="utf-8-sig", newline="") as f:
+        reader = _csv.reader(f)
+        for raw in reader:
+            if not raw:
+                row_num += 1
+                continue
+            if raw[0].startswith("#"):
+                ws.cell(row=row_num, column=1, value=raw[0].lstrip("# ")).font = \
+                    Font(bold=True, size=10)
+                section = raw[0]
+                row_num += 1
+                continue
+            for col_idx, val in enumerate(raw, 1):
+                cell = ws.cell(row=row_num, column=col_idx, value=val)
+                if "status" in val.upper() or row_num == row_num:
+                    pass
+                status_col = 13 if "HORIZONTAL" in (section or "") else 12
+                if col_idx == status_col and val in _STATUS_FILL:
+                    for c in range(1, len(raw) + 1):
+                        ws.cell(row=row_num, column=c).fill = _STATUS_FILL[val]
+            row_num += 1
+
+    for col in ws.columns:
+        ws.column_dimensions[col[0].column_letter].width = 14
+
+
 def _qa_log_sheet(wb: Workbook, qa_log_path: str) -> None:
     ws = wb.create_sheet("QA Log")
     ws.column_dimensions["A"].width = 90
@@ -355,6 +399,7 @@ def generate_report(project_json: str, out_path: str) -> List[str]:
     pave_rows    = _read_csv(os.path.join(root, "out", "pavement_design.csv"))
     drain_rows   = _read_csv(os.path.join(root, "out", "drainage_design.csv"))
     haul_rows    = _read_csv(os.path.join(root, "out", "mass_haul.csv"))
+    curve_csv    = _p("curve_schedule_csv", "out/curve_schedule.csv")
     qa_log_path  = _p("qa_log", "out/qa/run_log.txt")
 
     wb = Workbook()
@@ -369,6 +414,7 @@ def generate_report(project_json: str, out_path: str) -> List[str]:
     _drainage_sheet(wb, drain_rows)
     _boq_sheet(wb, boq_rows)
     _mass_haul_sheet(wb, haul_rows)
+    _curves_sheet(wb, curve_csv)
     _qa_log_sheet(wb, qa_log_path)
 
     os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)

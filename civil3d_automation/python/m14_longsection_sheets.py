@@ -212,23 +212,42 @@ def run(project_json_path):
             msgs.append('Profile: "%s"  Style: "%s"  Band: "%s"' % (
                 profile_name, pv_style, pv_band_style))
 
-            # ---- 4. Build sheet station ranges ----
+            # ---- 4. Apply optional station range override ----
+            override_s = design.get('station_range_start')
+            override_e = design.get('station_range_end')
+            align_sta_start = sta_start  # keep original for sheet numbering offset
+            if override_s is not None:
+                sta_start = max(float(override_s), sta_start)
+            if override_e is not None:
+                sta_end   = min(float(override_e), sta_end)
+            if sta_start >= sta_end:
+                tr.Abort()
+                return 'ERROR: station_range_start >= station_range_end after clamping'
+
+            # ---- 5. Build sheet station ranges ----
             sta = sta_start
             while sta < sta_end:
                 sta_nxt = min(sta + sheet_coverage_m, sta_end)
                 sheet_ranges.append((sta, sta_nxt))
                 sta += sheet_coverage_m
 
+            # Apply optional sheet cap
+            max_s = design.get('max_sheets_longsection')
+            if max_s is not None:
+                sheet_ranges = sheet_ranges[:int(max_s)]
+
             msgs.append('%d long-section sheets at H1:%d V1:%d (%.1f m/sheet)' % (
                 len(sheet_ranges), int(scale_h), int(scale_v), sheet_coverage_m))
+
+            sheet_num_offset = int((sta_start - align_sta_start) / sheet_coverage_m)
 
             # Model space block record (for placeholders / ProfileViews)
             bt  = tr.GetObject(db.BlockTableId, OpenMode.ForRead)
             msp = tr.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite)
 
-            # ---- 5. Create one layout per sheet ----
+            # ---- 6. Create one layout per sheet ----
             for idx, (sta_s, sta_e) in enumerate(sheet_ranges):
-                sheet_num   = idx + 1
+                sheet_num   = sheet_num_offset + idx + 1
                 layout_name = 'LSECT-%03d' % sheet_num
                 pv_name     = 'PV-%03d' % sheet_num
 

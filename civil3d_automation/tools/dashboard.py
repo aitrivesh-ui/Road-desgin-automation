@@ -427,6 +427,7 @@ class HomePanel(ttk.Frame):
             ("M18", "Intersection Design",    BLUE,     "out/intersection_geometry.csv"),
             ("M19", "Report Generator",       "#1c6f44","out/report/design_report.xlsx"),
             ("M20", "Design Verifier",        "#1c6f44","out/design_verification.txt"),
+            ("M21", "Curve Schedule",         PURPLE,   "out/curve_schedule.csv"),
         ]
 
         for i, (mod, name, colour, outrel) in enumerate(modules):
@@ -466,7 +467,7 @@ class HomePanel(ttk.Frame):
                     panel._cfg_var.set(p)
 
     def _goto(self, mod: str):
-        tab_names = {"M16": 1, "M17": 2, "M18": 3, "M19": 4, "M20": 5}
+        tab_names = {"M16": 1, "M17": 2, "M18": 3, "M19": 4, "M20": 5, "M21": 6}
         idx = tab_names.get(mod)
         if idx is not None:
             self._notebook.select(idx)
@@ -484,6 +485,67 @@ class HomePanel(ttk.Frame):
                 lbl.configure(text=f"Output exists ({size:,} bytes)", fg=GREEN, bg=BG_PANEL)
             else:
                 lbl.configure(text="No output yet", fg=FG_DIM, bg=BG_PANEL)
+
+
+# ---------------------------------------------------------------------------
+# M21 — Curve Schedule
+# ---------------------------------------------------------------------------
+PURPLE = "#8b5cf6"
+
+class CurveSchedulePanel(ToolPanel):
+    def __init__(self, parent):
+        super().__init__(parent, "M21", "Curve Schedule — clothoid A, K-values, SSD", PURPLE)
+        self._align_var   = tk.StringVar(value=os.path.join(ROOT, "csv", "alignment_pi.csv"))
+        self._profile_var = tk.StringVar(value=os.path.join(ROOT, "csv", "profile_pvis.csv"))
+        self._csv_var     = tk.StringVar(value=os.path.join(ROOT, "out", "curve_schedule.csv"))
+        self._report_var  = tk.StringVar(value=os.path.join(ROOT, "out", "curve_schedule_report.txt"))
+        self._build_form()
+
+    def _build_form(self):
+        body = tk.Frame(self, bg=BG_PANEL)
+        body.pack(fill="x", pady=(6, 0))
+        self._row(body, "alignment_pi.csv",  self._align_var,   lambda: self._pick(self._align_var))
+        self._row(body, "profile_pvis.csv",  self._profile_var, lambda: self._pick(self._profile_var))
+        self._row(body, "Output CSV",        self._csv_var,     lambda: self._save(self._csv_var, ".csv"))
+        self._row(body, "Output report",     self._report_var,  lambda: self._save(self._report_var, ".txt"))
+
+        info = tk.Frame(body, bg=BG_PANEL)
+        info.pack(fill="x", padx=14, pady=(2, 4))
+        tk.Label(info,
+                 text="Checks: radius vs Rmin · clothoid A parameter · K-value vs Austroads table · "
+                      "SSD at crest · compound/reverse curves",
+                 bg=BG_PANEL, fg=FG_DIM, font=("Segoe UI", 8),
+                 anchor="w", wraplength=640, justify="left").pack(fill="x")
+
+        btn_row = tk.Frame(body, bg=BG_PANEL)
+        btn_row.pack(fill="x", padx=14, pady=(8, 4))
+        self._run_btn = ttk.Button(btn_row, text="▶  Run", command=self._run,
+                                   style="Run.TButton", width=14)
+        self._run_btn.pack(side="left", padx=(0, 8))
+        ttk.Button(btn_row, text="📂  Open CSV",    width=14,
+                   command=lambda: _open_path(self._csv_var.get())).pack(side="left", padx=(0, 4))
+        ttk.Button(btn_row, text="📂  Open report", width=14,
+                   command=lambda: _open_path(self._report_var.get())).pack(side="left")
+        ttk.Button(btn_row, text="🗑  Clear log", command=self._clear_log,
+                   width=12).pack(side="right")
+
+        self._build_log(self).pack(fill="both", expand=True, padx=14, pady=(4, 14))
+
+    def _pick(self, var):
+        p = filedialog.askopenfilename(filetypes=[("CSV", "*.csv"), ("All", "*.*")])
+        if p: var.set(p)
+
+    def _save(self, var, ext):
+        p = filedialog.asksaveasfilename(defaultextension=ext,
+                filetypes=[("CSV" if ext == ".csv" else "Text", f"*{ext}")])
+        if p: var.set(p)
+
+    def _run(self):
+        cmd = [sys.executable, os.path.join(TOOLS_DIR, "m21_curve_schedule.py"),
+               "--cli", self._align_var.get(), self._profile_var.get(),
+               "--out-csv",    self._csv_var.get(),
+               "--out-report", self._report_var.get()]
+        self._run_cmd(cmd)
 
 
 # ---------------------------------------------------------------------------
@@ -586,6 +648,7 @@ class Dashboard(tk.Tk):
             "M18": IntersectionPanel(nb),
             "M19": ReportPanel(nb),
             "M20": VerifierPanel(nb),
+            "M21": CurveSchedulePanel(nb),
         }
 
         home = HomePanel(nb, nb, panels, self._cfg_var)
@@ -596,6 +659,7 @@ class Dashboard(tk.Tk):
         nb.add(panels["M18"],    text="  M18 Intersections  ")
         nb.add(panels["M19"],    text="  M19 Report  ")
         nb.add(panels["M20"],    text="  M20 Verify  ")
+        nb.add(panels["M21"],    text="  M21 Curves  ")
         nb.add(PreflightPanel(nb),  text="  Preflight  ")
         nb.add(WorkbookPanel(nb),   text="  Workbook  ")
 
@@ -604,7 +668,7 @@ class Dashboard(tk.Tk):
         bar.pack(fill="x", side="bottom")
         tk.Label(bar, textvariable=self._cfg_var, bg=BG_MID, fg=FG_DIM,
                  font=("Segoe UI", 8), anchor="w", padx=10).pack(side="left")
-        tk.Label(bar, text="Road Design Automation • M16–M20 Python Tools",
+        tk.Label(bar, text="Road Design Automation • M16–M21 Python Tools",
                  bg=BG_MID, fg=FG_DIM, font=("Segoe UI", 8), padx=10).pack(side="right")
 
     def _apply_styles(self):

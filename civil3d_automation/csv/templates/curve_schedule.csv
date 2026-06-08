@@ -1,0 +1,5 @@
+# HORIZONTAL CURVES
+pi_id,delta_deg,turn,radius_m,spiral_in_m,spiral_out_m,tangent_m,curve_length_m,A_in,A_out,R_min,design_speed_kph,status,notes
+
+# VERTICAL CURVES
+pvi_index,station_m,grade_in_pct,grade_out_pct,delta_g_pct,curve_type,k_provided,k_min_req,curve_length_provided_m,curve_length_min_req_m,design_speed_kph,status,notes

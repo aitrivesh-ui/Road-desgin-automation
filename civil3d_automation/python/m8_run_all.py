@@ -62,7 +62,10 @@ def run(project_json, step_filter):
     t_run0 = time.time()
     manifest_steps = []
 
-    g_extra = {}
+    g_extra = {
+        'STATION_RANGE_START': design.get('station_range_start'),
+        'STATION_RANGE_END':   design.get('station_range_end'),
+    }
 
     if 'm1' in steps:
         t0 = time.time()

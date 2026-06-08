@@ -88,6 +88,73 @@ def check_alignment(rows: List[dict]) -> List[Finding]:
     return findings
 
 
+# Austroads 6th Edition Table 6.6 / 6.7 — minimum K-values by design speed (km/h)
+_K_CREST_MIN = {60: 10, 70: 17, 80: 26, 90: 39, 100: 55, 110: 75, 120: 100, 130: 130}
+_K_SAG_MIN   = {60:  8, 70: 12, 80: 16, 90: 21, 100: 27, 110:  34, 120:  43, 130:  54}
+
+
+def _nearest_speed(v: float, table: dict) -> int:
+    return min(table.keys(), key=lambda k: abs(k - v))
+
+
+def check_vertical_curves(rows: List[dict], default_speed: float = 80.0) -> List[Finding]:
+    """Validate K-values against Austroads minimum table for each internal PVI."""
+    if not rows or len(rows) < 3:
+        return [_skip("profile_pvis.csv: fewer than 3 PVIs — no vertical curve checks")]
+
+    findings: List[Finding] = []
+    checked = 0
+
+    for i in range(1, len(rows) - 1):
+        prev, cur, nxt = rows[i - 1], rows[i], rows[i + 1]
+        try:
+            sta1, sta2 = float(prev["station_m"]), float(cur["station_m"])
+            sta3       = float(nxt["station_m"])
+            e1, e2, e3 = float(prev["elevation_m"]), float(cur["elevation_m"]), float(nxt["elevation_m"])
+        except (KeyError, ValueError):
+            continue
+
+        dsta1 = sta2 - sta1
+        dsta2 = sta3 - sta2
+        if dsta1 <= 0 or dsta2 <= 0:
+            continue
+
+        g1 = (e2 - e1) / dsta1 * 100.0
+        g2 = (e3 - e2) / dsta2 * 100.0
+        dg = g2 - g1
+
+        if abs(dg) < 0.01:
+            continue   # tangent — no curve check needed
+
+        curve_type = "crest" if dg < 0 else "sag"
+        k_prov     = _float(cur, "k_crest" if curve_type == "crest" else "k_sag")
+        speed_key  = _nearest_speed(default_speed, _K_CREST_MIN)
+        k_min      = (_K_CREST_MIN if curve_type == "crest" else _K_SAG_MIN)[speed_key]
+
+        checked += 1
+        if k_prov <= 0:
+            findings.append(_warn(
+                f"profile_pvis row {i+2} (sta={sta2:.1f}m): {curve_type} curve "
+                f"— no K-value supplied (K_min={k_min} at {speed_key} km/h)"
+            ))
+        elif k_prov < k_min * 0.8:
+            findings.append(_err(
+                f"profile_pvis row {i+2} (sta={sta2:.1f}m): {curve_type} K={k_prov:.0f} "
+                f"< absolute minimum {k_min} at {speed_key} km/h"
+            ))
+        elif k_prov < k_min:
+            findings.append(_warn(
+                f"profile_pvis row {i+2} (sta={sta2:.1f}m): {curve_type} K={k_prov:.0f} "
+                f"< recommended {k_min} at {speed_key} km/h"
+            ))
+
+    if not findings and checked > 0:
+        findings.append(_ok(f"profile_pvis.csv — {checked} vertical curve(s), K-values OK"))
+    elif checked == 0:
+        findings.append(_skip("profile_pvis.csv — no grade changes requiring vertical curves"))
+    return findings
+
+
 def check_profile(rows: List[dict], max_grade: float, min_grade: float) -> List[Finding]:
     findings: List[Finding] = []
     if not rows:
@@ -265,8 +332,11 @@ def run_verification(project_json: str) -> List[Finding]:
     max_grade = float(design.get("max_grade_pct", 8.0))
     min_grade = float(design.get("min_grade_pct", 0.3))
 
+    default_speed = float(design.get("design_speed_kph", 80.0))
+
     findings: List[Finding] = []
     findings += check_alignment(align_rows)
+    findings += check_vertical_curves(profile_rows, default_speed)
     findings += check_profile(profile_rows, max_grade, min_grade)
     findings += check_volumes(vol_rows)
     findings += check_pavement(pave_rows)

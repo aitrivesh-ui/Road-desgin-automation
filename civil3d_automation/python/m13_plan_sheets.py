@@ -162,19 +162,39 @@ def run(project_json_path):
             msgs.append('Alignment "%s": %.3f m to %.3f m (length %.1f m)' % (
                 align_name, sta_start, sta_end, align_len))
 
-            # ---- 4. Calculate sheet station ranges ----
+            # ---- 4. Apply optional station range override ----
+            override_s = design.get('station_range_start')
+            override_e = design.get('station_range_end')
+            align_sta_start = sta_start  # keep original for sheet numbering offset
+            if override_s is not None:
+                sta_start = max(float(override_s), sta_start)
+            if override_e is not None:
+                sta_end   = min(float(override_e), sta_end)
+            if sta_start >= sta_end:
+                tr.Abort()
+                return 'ERROR: station_range_start >= station_range_end after clamping'
+
+            # ---- 5. Calculate sheet station ranges ----
             sta = sta_start
             while sta < sta_end:
                 sta_nxt = min(sta + sheet_coverage_m, sta_end)
                 sheet_ranges.append((sta, sta_nxt))
                 sta += sheet_coverage_m
 
+            # Apply optional sheet cap
+            max_s = design.get('max_sheets_plan')
+            if max_s is not None:
+                sheet_ranges = sheet_ranges[:int(max_s)]
+
             msgs.append('%d plan sheets at 1:%d (%.1f m/sheet)' % (
                 len(sheet_ranges), int(plan_scale), sheet_coverage_m))
 
-            # ---- 5. Create one layout per sheet ----
+            # Sheet number offset so PLAN-NNN stays consistent even on sub-ranges
+            sheet_num_offset = int((sta_start - align_sta_start) / sheet_coverage_m)
+
+            # ---- 6. Create one layout per sheet ----
             for idx, (sta_s, sta_e) in enumerate(sheet_ranges):
-                sheet_num   = idx + 1
+                sheet_num   = sheet_num_offset + idx + 1
                 layout_name = 'PLAN-%03d' % sheet_num
 
                 # Skip if already exists (idempotent re-run)

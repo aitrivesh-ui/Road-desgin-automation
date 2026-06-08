@@ -71,7 +71,7 @@ def check_alignment(rows: List[dict]) -> List[Finding]:
     if not rows:
         return [_skip("alignment_pi.csv not found or empty")]
     for i, r in enumerate(rows):
-        sta = _float(r, "easting")
+        pi_id  = r.get("pi_id", "row %d" % (i + 2))
         radius = _float(r, "radius_m")
         speed  = _float(r, "design_speed_kph", 80)
         if radius > 0 and speed > 0:
@@ -80,7 +80,7 @@ def check_alignment(rows: List[dict]) -> List[Finding]:
             r_min = speed ** 2 / (127 * (0.07 + 0.14))
             if radius < r_min:
                 findings.append(_warn(
-                    f"PI row {i+2}: radius {radius:.1f} m < recommended minimum "
+                    f"PI {pi_id}: radius {radius:.1f} m < recommended minimum "
                     f"{r_min:.1f} m at {speed:.0f} km/h"
                 ))
     if not findings:

@@ -117,8 +117,8 @@ def _material_selection(cbr: float):
 
 def design_pavement(inp: PavementInput) -> PavementResult:
     """Apply empirical thickness formula and layer split."""
-    cbr = inp.subgrade_cbr
-    esa = inp.traffic_esa_million
+    cbr = max(inp.subgrade_cbr, 0.5)   # clamp: CBR=0 is undesignable; 0.5 gives conservative result
+    esa = max(inp.traffic_esa_million, 0.0)
 
     # Total structural thickness (mm)
     # Simplified Austroads-inspired: T = 150 + 75*log10(ESA+1) + 300/CBR

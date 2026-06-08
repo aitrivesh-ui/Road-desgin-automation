@@ -446,15 +446,27 @@ def compute_sections(
     pts = _sort_by_station(cl_pts)
     sta = _cum_stations(pts)
 
-    def _nearest(p: SurveyPoint) -> int:
-        return min(range(len(pts)), key=lambda i: _dist(pts[i], p))
+    # Use KDTree for O(n log n) nearest-neighbour when scipy is available;
+    # fall back to O(n²) linear scan for small surveys or missing dependency.
+    try:
+        from scipy.spatial import KDTree as _KDTree
+        _coords = [(q.easting, q.northing) for q in pts]
+        _tree   = _KDTree(_coords)
+        def _nearest(p: SurveyPoint) -> int:
+            _, idx = _tree.query((p.easting, p.northing))
+            return int(idx)
+    except Exception:
+        def _nearest(p: SurveyPoint) -> int:
+            return min(range(len(pts)), key=lambda i: _dist(pts[i], p))
 
     left_by:  dict[int, list[float]] = {}
     right_by: dict[int, list[float]] = {}
     for p in ls_pts:
-        left_by.setdefault(_nearest(p), []).append(_dist(pts[_nearest(p)], p))
+        idx = _nearest(p)
+        left_by.setdefault(idx, []).append(_dist(pts[idx], p))
     for p in rs_pts:
-        right_by.setdefault(_nearest(p), []).append(_dist(pts[_nearest(p)], p))
+        idx = _nearest(p)
+        right_by.setdefault(idx, []).append(_dist(pts[idx], p))
 
     all_idxs = sorted(set(left_by) | set(right_by))
     if not all_idxs:

@@ -7,6 +7,8 @@ DEFAULT_CATALOGUE = 'config/irc37_catalogue.json'
 LAYER_ORDER = ('GSB', 'WMM', 'DBM', 'BC')
 MM_PER_M = 1000.0
 
+_CATALOGUE_CACHE = {}
+
 
 def _package_root_from_here():
     here = os.path.dirname(os.path.abspath(__file__))
@@ -17,8 +19,11 @@ def load_catalogue(path=None):
     root = _package_root_from_here()
     rel = path or DEFAULT_CATALOGUE
     full = rel if os.path.isabs(rel) else os.path.join(root, rel)
-    with open(full, 'r', encoding='utf-8') as f:
-        return json.load(f)
+    full = os.path.normpath(full)
+    if full not in _CATALOGUE_CACHE:
+        with open(full, 'r', encoding='utf-8') as f:
+            _CATALOGUE_CACHE[full] = json.load(f)
+    return _CATALOGUE_CACHE[full]
 
 
 def snap_bin(val, bins):

@@ -303,7 +303,13 @@ def rollup_boq_lines(
 ) -> tuple[list[list], float]:
     lines: list[list] = []
     subtotal = 0.0
-    for (src, key), row in sorted(pay.items(), key=lambda x: x[1].get("pay_item", "")):
+    def _pay_item_sort_key(item):
+        pi = item[1].get("pay_item", "")
+        try:
+            return tuple(int(p) if p.isdigit() else p for p in pi.replace("-", ".").split("."))
+        except Exception:
+            return (pi,)
+    for (src, key), row in sorted(pay.items(), key=_pay_item_sort_key):
         q = resolve_quantity(row, qty_lookup, marking_by_len, marking_by_area)
         if q is None:
             continue

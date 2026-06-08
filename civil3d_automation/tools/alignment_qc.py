@@ -13,7 +13,9 @@ CLI:
 import csv as _csv
 import math
 import os
+import queue
 import sys
+import threading
 from typing import List, NamedTuple, Optional
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
@@ -487,6 +489,20 @@ def run_pipeline(input_csv:       str,
 # GUI
 # ---------------------------------------------------------------------------
 
+def _open_path(path: str) -> None:
+    """Open a file or its parent folder in the OS file manager."""
+    import subprocess as _sp
+    if not path or not os.path.exists(path):
+        return
+    target = path if os.path.isfile(path) else os.path.dirname(path)
+    if sys.platform == "win32":
+        os.startfile(target)
+    elif sys.platform == "darwin":
+        _sp.Popen(["open", target])
+    else:
+        _sp.Popen(["xdg-open", target])
+
+
 def _launch_gui() -> None:
     try:
         import tkinter as tk
@@ -498,10 +514,15 @@ def _launch_gui() -> None:
     root = tk.Tk()
     root.title("Alignment PI Quality Control")
     root.configure(bg="#1c2030")
-    root.geometry("720x620")
+    root.geometry("720x660")
 
     BG, FG, AMBER = "#1c2030", "#f0f0f0", "#F0A500"
-    BG_P = "#252a3a"
+    BG_P  = "#252a3a"
+    GREEN = "#28a745"
+    RED   = "#dc3545"
+    MONO  = ("Consolas", 9) if sys.platform == "win32" else ("Courier New", 9)
+
+    _q: queue.Queue = queue.Queue()
 
     def _lrow(parent, label, var, pick_fn=None, w=50):
         f = tk.Frame(parent, bg=BG_P)
@@ -512,11 +533,16 @@ def _launch_gui() -> None:
         if pick_fn:
             ttk.Button(f, text="…", width=3, command=pick_fn).pack(side="left")
 
+    # ── header ──────────────────────────────────────────────────────────────
     frm = tk.Frame(root, bg="#252a3a", pady=6)
     frm.pack(fill="x")
     tk.Label(frm, text="Alignment PI QC", bg="#252a3a", fg=AMBER,
              font=("Segoe UI", 12, "bold"), padx=12).pack(side="left")
+    status_lbl = tk.Label(frm, text="—", bg="#252a3a", fg="#9098b0",
+                          font=("Segoe UI", 10, "bold"), padx=12)
+    status_lbl.pack(side="right")
 
+    # ── inputs ───────────────────────────────────────────────────────────────
     body = tk.Frame(root, bg=BG_P)
     body.pack(fill="x", pady=4)
 
@@ -545,37 +571,85 @@ def _launch_gui() -> None:
     ttk.Checkbutton(opt, text="Auto-remove DUPLICATE and COORD_OUTLIER errors",
                     variable=auto_var).pack(side="left")
 
+    # ── log ──────────────────────────────────────────────────────────────────
     log_box = scrolledtext.ScrolledText(root, bg="#0d1117", fg=FG, height=16,
-                                        font=("Courier New", 9), relief="flat")
-    log_box.tag_configure("ok",    foreground="#28a745")
+                                        font=MONO, relief="flat")
+    log_box.tag_configure("ok",    foreground=GREEN)
     log_box.tag_configure("warn",  foreground="#ffc107")
-    log_box.tag_configure("error", foreground="#dc3545")
+    log_box.tag_configure("error", foreground=RED)
+    log_box.configure(state="disabled")
     log_box.pack(fill="both", expand=True, padx=10, pady=6)
 
+    # ── poll queue → log (runs on main thread via after()) ──────────────────
+    def _poll():
+        try:
+            while True:
+                kind, val = _q.get_nowait()
+                if kind == "line":
+                    tag = ("ok"    if val.startswith("RESULT: PASS") or val.startswith("OK")
+                           else "warn"  if "WARN" in val
+                           else "error" if ("ERROR" in val or "FAIL" in val)
+                           else "")
+                    log_box.configure(state="normal")
+                    log_box.insert("end", val + "\n", tag)
+                    log_box.see("end")
+                    log_box.configure(state="disabled")
+                elif kind == "done":
+                    rc = val
+                    status_lbl.configure(
+                        text="Done ✓" if rc == 0 else "Failed ✗",
+                        fg=GREEN if rc == 0 else RED)
+                    run_btn.configure(state="normal")
+                    return
+        except queue.Empty:
+            pass
+        root.after(80, _poll)
+
+    # ── run (background thread so GUI stays responsive) ──────────────────────
     def _run():
-        log_box.configure(state="normal")
-        log_box.delete("1.0", "end")
         try:
             tol = float(tol_var.get())
             spc = float(spc_var.get())
             tan = float(tan_var.get())
             dfl = float(def_var.get())
         except ValueError:
+            log_box.configure(state="normal")
+            log_box.delete("1.0", "end")
             log_box.insert("end", "[ERROR] Non-numeric parameter value\n", "error")
             log_box.configure(state="disabled")
+            status_lbl.configure(text="Failed ✗", fg=RED)
             return
-        for line in run_pipeline(in_var.get(), tol, spc, tan, dfl,
-                                 auto_var.get(), csv_var.get(), rpt_var.get()):
-            tag = "ok" if line.startswith("RESULT: PASS") or line.startswith("OK") else \
-                  "warn" if "WARN" in line else \
-                  "error" if "ERROR" in line or "FAIL" in line else ""
-            log_box.insert("end", line + "\n", tag)
-        log_box.configure(state="disabled")
 
+        log_box.configure(state="normal")
+        log_box.delete("1.0", "end")
+        log_box.configure(state="disabled")
+        run_btn.configure(state="disabled")
+        status_lbl.configure(text="Running…", fg="#ffc107")
+
+        def _worker():
+            try:
+                lines = run_pipeline(in_var.get(), tol, spc, tan, dfl,
+                                     auto_var.get(), csv_var.get(), rpt_var.get())
+                for line in lines:
+                    _q.put(("line", line))
+                _q.put(("done", 0))
+            except Exception as exc:
+                _q.put(("line", f"[ERROR] {exc}"))
+                _q.put(("done", 1))
+
+        threading.Thread(target=_worker, daemon=True).start()
+        _poll()
+
+    # ── buttons ──────────────────────────────────────────────────────────────
     btn_row = tk.Frame(root, bg=BG)
     btn_row.pack(pady=4)
-    ttk.Button(btn_row, text="▶  Run QC", command=_run).pack(side="left", padx=6)
-    ttk.Button(btn_row, text="Close",     command=root.destroy).pack(side="left")
+    run_btn = ttk.Button(btn_row, text="▶  Run QC", command=_run)
+    run_btn.pack(side="left", padx=6)
+    ttk.Button(btn_row, text="📂  Open CSV",
+               command=lambda: _open_path(csv_var.get())).pack(side="left", padx=4)
+    ttk.Button(btn_row, text="📂  Open report",
+               command=lambda: _open_path(rpt_var.get())).pack(side="left", padx=4)
+    ttk.Button(btn_row, text="Close", command=root.destroy).pack(side="left", padx=6)
 
     root.mainloop()
 

@@ -19,6 +19,11 @@ TOOLS_DIR   = os.path.dirname(os.path.abspath(__file__))
 ROOT        = os.path.dirname(TOOLS_DIR)
 DEFAULT_CFG = os.path.join(ROOT, "config", "project.json")
 
+# Import alignment_qc directly so AlignmentQCPanel calls run_pipeline() in-process
+if TOOLS_DIR not in sys.path:
+    sys.path.insert(0, TOOLS_DIR)
+import alignment_qc as _aqc
+
 # ---------------------------------------------------------------------------
 # Colour palette
 # ---------------------------------------------------------------------------
@@ -629,17 +634,40 @@ class AlignmentQCPanel(ToolPanel):
         if p: var.set(p)
 
     def _run(self):
-        cmd = [sys.executable, os.path.join(TOOLS_DIR, "alignment_qc.py"),
-               "--cli", self._csv_var.get(),
-               "--tolerance",      self._tol_var.get(),
-               "--min-spacing",    self._spacing_var.get(),
-               "--min-tangent",    self._tangent_var.get(),
-               "--max-deflection", self._deflect_var.get(),
-               "--out-csv",        self._out_csv_var.get(),
-               "--out-report",     self._report_var.get()]
-        if self._remove_var.get():
-            cmd.append("--auto-remove")
-        self._run_cmd(cmd)
+        try:
+            tol = float(self._tol_var.get())
+            spc = float(self._spacing_var.get())
+            tan = float(self._tangent_var.get())
+            dfl = float(self._deflect_var.get())
+        except ValueError:
+            self._log("[ERROR] Non-numeric parameter value")
+            self._set_status("error")
+            return
+
+        self._clear_log()
+        self._set_status("running")
+        self._log(f"[info] Alignment QC → {self._csv_var.get()}\n")
+
+        csv_path    = self._csv_var.get()
+        out_csv     = self._out_csv_var.get()
+        out_report  = self._report_var.get()
+        auto_remove = self._remove_var.get()
+
+        def _worker():
+            try:
+                lines = _aqc.run_pipeline(
+                    csv_path, tol, spc, tan, dfl,
+                    auto_remove, out_csv, out_report,
+                )
+                for line in lines:
+                    self._queue.put(("line", line))
+                self._queue.put(("done", 0))
+            except Exception as exc:
+                self._queue.put(("line", f"[ERROR] {exc}"))
+                self._queue.put(("done", 1))
+
+        threading.Thread(target=_worker, daemon=True).start()
+        self._poll()
 
 
 # ---------------------------------------------------------------------------

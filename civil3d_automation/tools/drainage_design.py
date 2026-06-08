@@ -28,7 +28,8 @@ from typing import NamedTuple, List, Optional
 # Root / output directory convention
 # ---------------------------------------------------------------------------
 
-ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+ROOT = (os.environ.get("ROAD_ROOT") or
+        os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")))
 
 # ---------------------------------------------------------------------------
 # Data structures

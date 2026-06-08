@@ -25,7 +25,8 @@ import os
 import sys
 from typing import List, NamedTuple, Optional
 
-ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+ROOT = (os.environ.get("ROAD_ROOT") or
+        os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")))
 
 DEFAULT_GEOM_OUT   = os.path.join(ROOT, "out", "intersection_geometry.csv")
 DEFAULT_OFFSET_OUT = os.path.join(ROOT, "out", "offset_alignment_inputs.csv")

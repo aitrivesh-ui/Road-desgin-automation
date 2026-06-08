@@ -15,7 +15,8 @@ import os
 import sys
 from typing import List, NamedTuple, Optional, Tuple
 
-ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+ROOT = (os.environ.get("ROAD_ROOT") or
+        os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")))
 
 DEFAULT_CSV_OUT    = os.path.join(ROOT, "out", "curve_schedule.csv")
 DEFAULT_REPORT_OUT = os.path.join(ROOT, "out", "curve_schedule_report.txt")

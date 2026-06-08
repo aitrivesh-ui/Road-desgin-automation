@@ -24,7 +24,8 @@ except ImportError:
     print("Install openpyxl: pip install -r civil3d_automation/requirements-tools.txt", file=sys.stderr)
     sys.exit(1)
 
-ROOT  = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+ROOT = (os.environ.get("ROAD_ROOT") or
+        os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")))
 TEMPL = os.path.join(ROOT, "csv", "templates")
 OUT   = os.path.join(TEMPL, "RoadAutomation_DataStarter.xlsx")
 

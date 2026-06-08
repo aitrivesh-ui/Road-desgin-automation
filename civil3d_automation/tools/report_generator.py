@@ -36,7 +36,8 @@ except ImportError:
 # Root / output path convention
 # ---------------------------------------------------------------------------
 
-ROOT    = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+ROOT = (os.environ.get("ROAD_ROOT") or
+        os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")))
 DEFAULT_PROJECT_JSON = os.path.join(ROOT, "config", "project.json")
 DEFAULT_OUT          = os.path.join(ROOT, "out", "report", "design_report.xlsx")
 

@@ -13,16 +13,33 @@ import tkinter as tk
 from tkinter import ttk, filedialog, scrolledtext
 
 # ---------------------------------------------------------------------------
-# Paths
+# Paths  (frozen-aware: PyInstaller sets sys.frozen and sys.executable)
 # ---------------------------------------------------------------------------
-TOOLS_DIR   = os.path.dirname(os.path.abspath(__file__))
-ROOT        = os.path.dirname(TOOLS_DIR)
+if getattr(sys, "frozen", False):
+    TOOLS_DIR = os.path.dirname(sys.executable)
+    ROOT      = TOOLS_DIR
+    # Ensure tools dir is importable and set env var for child processes
+    if TOOLS_DIR not in sys.path:
+        sys.path.insert(0, TOOLS_DIR)
+    os.environ.setdefault("ROAD_ROOT", ROOT)
+else:
+    TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
+    ROOT      = os.path.dirname(TOOLS_DIR)
+    if TOOLS_DIR not in sys.path:
+        sys.path.insert(0, TOOLS_DIR)
+
 DEFAULT_CFG = os.path.join(ROOT, "config", "project.json")
 
 # Import alignment_qc directly so AlignmentQCPanel calls run_pipeline() in-process
-if TOOLS_DIR not in sys.path:
-    sys.path.insert(0, TOOLS_DIR)
 import alignment_qc as _aqc
+
+
+def _tool_cmd(tool_path: str) -> list:
+    """Return command prefix to run a tool — uses --run-tool dispatch when frozen."""
+    if getattr(sys, "frozen", False):
+        module = os.path.splitext(os.path.basename(tool_path))[0]
+        return [sys.executable, "--run-tool", module]
+    return [sys.executable, tool_path]
 
 # ---------------------------------------------------------------------------
 # Colour palette
@@ -224,8 +241,8 @@ class PavementPanel(ToolPanel):
         if p: var.set(p)
 
     def _run(self):
-        cmd = [sys.executable, os.path.join(TOOLS_DIR, "pavement_design.py"),
-               "--cli", self._in_var.get(), "--out", self._out_var.get()]
+        cmd = _tool_cmd(os.path.join(TOOLS_DIR, "pavement_design.py")) + \
+              ["--cli", self._in_var.get(), "--out", self._out_var.get()]
         self._run_cmd(cmd)
 
 
@@ -256,8 +273,8 @@ class DrainagePanel(ToolPanel):
         if p: var.set(p)
 
     def _run(self):
-        cmd = [sys.executable, os.path.join(TOOLS_DIR, "drainage_design.py"),
-               "--cli", self._in_var.get(), "--out", self._out_var.get()]
+        cmd = _tool_cmd(os.path.join(TOOLS_DIR, "drainage_design.py")) + \
+              ["--cli", self._in_var.get(), "--out", self._out_var.get()]
         self._run_cmd(cmd)
 
 
@@ -302,7 +319,7 @@ class IntersectionPanel(ToolPanel):
         if p: var.set(p)
 
     def _run(self):
-        cmd = [sys.executable, os.path.join(TOOLS_DIR, "intersection_design.py"),
+        cmd = _tool_cmd(os.path.join(TOOLS_DIR, "intersection_design.py")) + [
                "--cli", self._in_var.get(),
                "--geom-out",   self._geom_var.get(),
                "--offset-out", self._offset_var.get()]
@@ -343,8 +360,8 @@ class ReportPanel(ToolPanel):
         if p: var.set(p)
 
     def _run(self):
-        cmd = [sys.executable, os.path.join(TOOLS_DIR, "report_generator.py"),
-               self._cfg_var.get()]
+        cmd = _tool_cmd(os.path.join(TOOLS_DIR, "report_generator.py")) + \
+              [self._cfg_var.get()]
         self._run_cmd(cmd)
 
 
@@ -381,8 +398,8 @@ class VerifierPanel(ToolPanel):
         if p: self._cfg_var.set(p)
 
     def _run(self):
-        cmd = [sys.executable, os.path.join(TOOLS_DIR, "design_verifier.py"),
-               self._cfg_var.get()]
+        cmd = _tool_cmd(os.path.join(TOOLS_DIR, "design_verifier.py")) + \
+              [self._cfg_var.get()]
         self._run_cmd(cmd)
 
 
@@ -547,7 +564,7 @@ class CurveSchedulePanel(ToolPanel):
         if p: var.set(p)
 
     def _run(self):
-        cmd = [sys.executable, os.path.join(TOOLS_DIR, "m21_curve_schedule.py"),
+        cmd = _tool_cmd(os.path.join(TOOLS_DIR, "m21_curve_schedule.py")) + [
                "--cli", self._align_var.get(), self._profile_var.get(),
                "--out-csv",    self._csv_var.get(),
                "--out-report", self._report_var.get()]
@@ -706,8 +723,8 @@ class PreflightPanel(ToolPanel):
         if p: self._cfg_var.set(p)
 
     def _run(self):
-        preflight = os.path.join(TOOLS_DIR, "road_automation_preflight.py")
-        cmd = [sys.executable, preflight, "--validate", self._cfg_var.get()]
+        cmd = _tool_cmd(os.path.join(TOOLS_DIR, "road_automation_preflight.py")) + \
+              ["--validate", self._cfg_var.get()]
         if self._strict_var.get():
             cmd.append("--strict")
         self._run_cmd(cmd)
@@ -741,8 +758,8 @@ class WorkbookPanel(ToolPanel):
         if p: var.set(p)
 
     def _run(self):
-        cmd = [sys.executable, os.path.join(TOOLS_DIR, "build_starter_workbook.py"),
-               "--out", self._out_var.get()]
+        cmd = _tool_cmd(os.path.join(TOOLS_DIR, "build_starter_workbook.py")) + \
+              ["--out", self._out_var.get()]
         self._run_cmd(cmd)
 
 

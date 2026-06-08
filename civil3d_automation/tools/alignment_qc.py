@@ -18,7 +18,8 @@ import sys
 import threading
 from typing import List, NamedTuple, Optional
 
-ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+ROOT = (os.environ.get("ROAD_ROOT") or
+        os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")))
 
 DEFAULT_OUT_CSV    = os.path.join(ROOT, "out", "alignment_pi_qc.csv")
 DEFAULT_OUT_REPORT = os.path.join(ROOT, "out", "alignment_qc_report.txt")
